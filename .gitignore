@@ -1,0 +1,8 @@
+# Only the rendered page belongs in this repo. Never the dashboard source, its caches, its config,
+# its logs, or anything that reads credentials — this repository is PUBLIC.
+*
+!.gitignore
+!.nojekyll
+!index.html
+!tvfxjwntyc/
+!tvfxjwntyc/index.html

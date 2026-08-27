@@ -1,0 +1,992 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sekuence Label Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style id="app-css">
+/* ── tokens ───────────────────────────────────────────────────────────────
+   Light is the complete palette on bare :root. Dark redefines ONLY tokens, once
+   for the un-stamped system-preference case and once for the explicit stamp, so
+   all three viewer states resolve. Nothing below the token blocks names a colour
+   literal. Neutrals carry a warm stone bias toward the gym-tape severity family;
+   the accent is a cool slate-teal so brand colour and severity colour can never
+   be confused for one another. */
+:root {
+  --ground:#F5F3EE; --surface:#FFFFFF; --sunken:#EFECE4;
+  --line:#E3DED3; --line-strong:#CFC7B8;
+  --ink:#1B1916; --ink-2:#4A443C; --muted:#6B6459;
+  --accent:#1F6473; --accent-soft:#DCEAEE; --accent-ink:#134D5A;
+  --crit:#9E2B1B; --crit-soft:#F6E2DE;
+  --warn:#A8830C; --warn-soft:#F7EDD5;
+  --good:#2F7248; --good-soft:#DFEDE3;
+  --shadow:0 1px 2px rgba(27,25,22,.05), 0 8px 24px -18px rgba(27,25,22,.35);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:#131210; --surface:#1D1B17; --sunken:#252119;
+    --line:#332F28; --line-strong:#4A443A;
+    --ink:#EFECE4; --ink-2:#C9C2B5; --muted:#9C9486;
+    --accent:#5AACC0; --accent-soft:#1B3940; --accent-ink:#8FCBDA;
+    --crit:#E2564B; --crit-soft:#3A211D;
+    --warn:#C99F28; --warn-soft:#33290F;
+    --good:#3F9459; --good-soft:#182C1F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:#131210; --surface:#1D1B17; --sunken:#252119;
+  --line:#332F28; --line-strong:#4A443A;
+  --ink:#EFECE4; --ink-2:#C9C2B5; --muted:#9C9486;
+  --accent:#5AACC0; --accent-soft:#1B3940; --accent-ink:#8FCBDA;
+  --crit:#E2564B; --crit-soft:#3A211D;
+  --warn:#C99F28; --warn-soft:#33290F;
+  --good:#3F9459; --good-soft:#182C1F;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -18px rgba(0,0,0,.8);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3 { font-family:"Archivo", ui-sans-serif, system-ui, sans-serif; text-wrap:balance; margin:0; }
+a { color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; }
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:2px; }
+code, .mono, td.num, th.num { font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace; }
+.num { font-variant-numeric: tabular-nums; text-align:right; }
+.wrap { max-width:1180px; margin:0 auto; padding:0 20px; }
+
+/* ── header ── */
+header {
+  position:sticky; top:0; z-index:20; background:var(--surface);
+  border-bottom:1px solid var(--line);
+}
+.masthead { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; padding:18px 0 12px; }
+.mark { font-family:"Archivo"; font-weight:700; font-size:19px; letter-spacing:-.02em; }
+.mark span { color:var(--accent); }
+.stamp { color:var(--muted); font-size:12.5px; margin-left:auto; font-variant-numeric:tabular-nums; }
+.strip { display:flex; gap:26px; flex-wrap:wrap; padding-bottom:14px; }
+.stat { display:flex; flex-direction:column; gap:1px; }
+.stat b { font-family:"Archivo"; font-weight:600; font-size:23px; letter-spacing:-.02em;
+          font-variant-numeric:tabular-nums; line-height:1.1; }
+.stat small { font-size:11px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); }
+.stat.alarm b { color:var(--crit); }
+
+/* ── tabs ── */
+nav { display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; }
+nav::-webkit-scrollbar { display:none; }
+nav button {
+  appearance:none; background:none; border:0; border-bottom:2px solid transparent;
+  color:var(--muted); font:inherit; font-size:13.5px; font-weight:500;
+  padding:9px 12px; cursor:pointer; white-space:nowrap;
+}
+nav button:hover { color:var(--ink); }
+nav button[aria-selected="true"] { color:var(--ink); border-bottom-color:var(--accent); }
+nav button .n { font-family:"IBM Plex Mono"; font-size:11px; color:var(--muted);
+                margin-left:5px; font-variant-numeric:tabular-nums; }
+
+main { padding:26px 0 80px; }
+section[hidden] { display:none; }
+.panel {
+  background:var(--surface); border:1px solid var(--line); border-radius:8px;
+  padding:20px; margin-bottom:18px; box-shadow:var(--shadow);
+}
+.panel > h2 { font-size:16px; font-weight:600; letter-spacing:-.01em; }
+.panel > .sub { color:var(--muted); font-size:13px; margin:5px 0 16px; max-width:74ch; }
+.panel > .sub:last-child { margin-bottom:0; }
+
+/* ── the queue: the one panel that makes a recommendation ── */
+.qcard {
+  display:grid; grid-template-columns:auto 1fr; gap:0 16px;
+  border:1px solid var(--line); border-radius:7px; padding:14px 16px 14px 0;
+  margin-bottom:10px; background:var(--surface); position:relative; overflow:hidden;
+}
+.qcard::before { content:""; position:absolute; inset:0 auto 0 0; width:3px; background:var(--line-strong); }
+.qcard.sev-1::before { background:var(--crit); }
+.qcard.sev-2::before { background:var(--warn); }
+.qcard.sev-3::before { background:var(--accent); }
+.qrank {
+  font-family:"Archivo"; font-weight:700; font-size:15px; color:var(--muted);
+  padding-left:18px; padding-top:1px; font-variant-numeric:tabular-nums;
+}
+.qhead { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.qname { font-family:"IBM Plex Mono"; font-weight:600; font-size:14.5px; }
+.qcard.kind-coverage .qname { font-family:"Archivo"; font-weight:600; font-size:15px; }
+.qreason { color:var(--ink-2); font-size:13.5px; margin-top:5px; max-width:82ch; }
+.qmeta { display:flex; gap:14px; flex-wrap:wrap; margin-top:8px;
+         font-family:"IBM Plex Mono"; font-size:11.5px; color:var(--muted); }
+
+.chip {
+  display:inline-flex; align-items:center; gap:5px; border-radius:99px;
+  padding:2px 9px; font-size:11px; font-weight:600; letter-spacing:.02em;
+  text-transform:uppercase; white-space:nowrap;
+}
+.chip.film { background:var(--crit-soft); color:var(--crit); }
+.chip.label { background:var(--accent-soft); color:var(--accent-ink); }
+.chip.resplit { background:var(--warn-soft); color:var(--warn); }
+.chip.ok { background:var(--good-soft); color:var(--good); }
+.chip.flat { background:var(--sunken); color:var(--muted); }
+
+/* ── the span-bar motif: what a strike span looks like on a timeline, reused
+      wherever a total is really a set of segments. Encodes distribution, not
+      decoration — the largest segment is the one that decides split health. ── */
+.bar { display:flex; gap:2px; height:8px; border-radius:2px; overflow:hidden; background:var(--sunken); }
+.bar i { display:block; height:100%; background:var(--line-strong); border-radius:1px; }
+.bar i.lead { background:var(--accent); }
+.bar i.over { background:var(--crit); }
+.meter { height:8px; border-radius:99px; background:var(--sunken); overflow:hidden; min-width:70px; }
+.meter i { display:block; height:100%; background:var(--accent); border-radius:99px; }
+.meter i.done { background:var(--good); }
+.meter i.low { background:var(--crit); }
+
+/* ── tables ── */
+.tablewrap { overflow-x:auto; margin:0 -20px; padding:0 20px; }
+table { border-collapse:collapse; width:100%; font-size:13px; }
+th { text-align:left; font-weight:600; font-size:11px; text-transform:uppercase;
+     letter-spacing:.07em; color:var(--muted); padding:0 10px 7px; white-space:nowrap;
+     border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--surface); }
+th.sortable { cursor:pointer; user-select:none; }
+th.sortable:hover { color:var(--ink); }
+th[aria-sort] { color:var(--ink); }
+th[aria-sort="descending"]::after { content:" ↓"; }
+th[aria-sort="ascending"]::after { content:" ↑"; }
+td { padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
+tbody tr:hover { background:var(--sunken); }
+td.name { font-family:"IBM Plex Mono"; font-size:12.5px; white-space:nowrap; }
+td.dim { color:var(--muted); }
+tr.bad td.name { color:var(--crit); }
+.toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+.toolbar input[type=search] {
+  font:inherit; font-size:13px; padding:5px 10px; border:1px solid var(--line-strong);
+  border-radius:5px; background:var(--surface); color:var(--ink); min-width:190px;
+}
+.toolbar label { font-size:12.5px; color:var(--muted); display:flex; gap:6px; align-items:center; }
+
+/* ── notes & callouts ── */
+.note { border-left:2px solid var(--line-strong); padding:2px 0 2px 12px; color:var(--muted);
+        font-size:12.5px; margin:12px 0 0; max-width:82ch; }
+.note.warn { border-left-color:var(--warn); color:var(--ink-2); }
+.note.crit { border-left-color:var(--crit); color:var(--ink-2); }
+.grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); }
+.tile { border:1px solid var(--line); border-radius:7px; padding:14px; }
+.tile h3 { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
+           font-weight:600; margin-bottom:6px; }
+.tile .big { font-family:"Archivo"; font-weight:700; font-size:30px; letter-spacing:-.02em;
+             font-variant-numeric:tabular-nums; line-height:1.05; }
+.tile .of { color:var(--muted); font-size:14px; font-weight:500; }
+.tile p { margin:8px 0 0; font-size:12.5px; color:var(--muted); }
+ul.plain { margin:10px 0 0; padding-left:18px; font-size:13px; color:var(--ink-2); }
+ul.plain li { margin-bottom:4px; }
+.kv { display:flex; gap:6px; font-size:12.5px; color:var(--muted); }
+.kv b { color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* ── kanban ── */
+.kan { display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
+.kan .col { border:1px solid var(--line); border-radius:7px; padding:12px; background:var(--sunken); }
+.kan .col h3 { font-size:11px; text-transform:uppercase; letter-spacing:.07em;
+               color:var(--muted); font-weight:600; }
+.kan .col .big { font-family:"Archivo"; font-weight:700; font-size:26px; margin-top:4px;
+                 font-variant-numeric:tabular-nums; }
+.kan .col .unk { font-size:11.5px; color:var(--warn); margin-top:2px; }
+
+footer { color:var(--muted); font-size:12px; padding:26px 0; border-top:1px solid var(--line); }
+
+@media (max-width:640px) {
+  .wrap { padding:0 14px; }
+  .panel { padding:15px; border-radius:7px; }
+  .tablewrap { margin:0 -15px; padding:0 15px; }
+  .strip { gap:18px; }
+  .stat b { font-size:19px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } }
+
+/* ── the work board ───────────────────────────────────────────────────────
+   The board is the page's reason to exist for everyone who is not Imran: it
+   answers "what am I doing today" without requiring anyone to read a metric.
+   Assignments, deadlines and status are SHARED — they are stored in the page
+   itself and republished when someone edits, so the board one person sees is
+   the board everyone sees. */
+.board-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+.seg { display:inline-flex; border:1px solid var(--line-strong); border-radius:6px; overflow:hidden; }
+.seg button {
+  appearance:none; border:0; background:var(--surface); color:var(--muted);
+  font:inherit; font-size:12.5px; padding:5px 11px; cursor:pointer; white-space:nowrap;
+}
+.seg button + button { border-left:1px solid var(--line); }
+.seg button[aria-pressed="true"] { background:var(--accent); color:var(--surface); }
+
+.work { display:flex; flex-direction:column; gap:8px; }
+.item {
+  display:grid; grid-template-columns:6px 1fr auto; gap:0;
+  border:1px solid var(--line); border-radius:7px; background:var(--surface); overflow:hidden;
+}
+/* One colour for work, so the stripe means "this is a job" rather than shifting with rank.
+   Red is reserved for the only card that deletes something. */
+.item .sev { background:var(--accent); }
+.item.danger .sev { background:var(--crit); }
+.item.done { opacity:.55; }
+.item.done .title { text-decoration:line-through; }
+.item .body { padding:12px 14px; min-width:0; }
+.item .title { display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; }
+.item .title b { font-family:"IBM Plex Mono"; font-weight:600; font-size:14px; }
+.item .why { color:var(--ink-2); font-size:13px; margin-top:4px; max-width:80ch; }
+.item .ids { margin-top:7px; display:flex; gap:6px; flex-wrap:wrap; }
+.item .ids code {
+  background:var(--sunken); border-radius:4px; padding:1px 6px; font-size:11.5px; color:var(--muted);
+}
+.item .ctl {
+  display:flex; flex-direction:column; gap:6px; padding:12px 14px; border-left:1px solid var(--line);
+  background:var(--sunken); min-width:190px;
+}
+.item .ctl label { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+.item .ctl select, .item .ctl input[type=date] {
+  font:inherit; font-size:12.5px; padding:4px 7px; border:1px solid var(--line-strong);
+  border-radius:5px; background:var(--surface); color:var(--ink); width:100%;
+}
+.item .ctl .row { display:flex; gap:6px; }
+.item .ctl .row > * { flex:1; min-width:0; }
+
+.due { font-size:11.5px; font-weight:600; }
+.due.over { color:var(--crit); }
+.due.soon { color:var(--warn); }
+.due.ok { color:var(--muted); }
+
+.flagbtn {
+  appearance:none; border:0; background:none; cursor:pointer; font-size:15px; line-height:1;
+  padding:2px 4px; border-radius:4px; color:var(--line-strong);
+}
+.flagbtn[aria-pressed="true"] { color:var(--warn); }
+.flagbtn:hover { background:var(--sunken); color:var(--warn); }
+
+.saving {
+  position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+  background:var(--ink); color:var(--ground); font-size:12.5px; padding:7px 14px;
+  border-radius:99px; z-index:60; box-shadow:var(--shadow);
+}
+.readonly-banner {
+  background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn);
+  border-radius:6px; padding:9px 13px; font-size:12.5px; margin-bottom:14px;
+}
+
+/* Plain-language diagnosis cards on the model tab. */
+.diag { border:1px solid var(--line); border-radius:7px; padding:14px 16px; margin-bottom:10px; }
+.diag h4 { margin:0; font-family:"Archivo"; font-size:14.5px; font-weight:600; }
+.diag .plain { margin-top:6px; font-size:13.5px; color:var(--ink-2); max-width:80ch; }
+.diag .todo { margin-top:9px; font-size:13px; font-weight:600; }
+.diag .todo.nobody { color:var(--muted); font-weight:400; }
+.diag .nums { margin-top:8px; font-family:"IBM Plex Mono"; font-size:11.5px; color:var(--muted); }
+
+.pick {
+  font:inherit; font-size:13px; padding:5px 9px; border:1px solid var(--line-strong);
+  border-radius:5px; background:var(--surface); color:var(--ink);
+}
+
+/* Home's single headline number — the week's goal, readable across a room. */
+.hero { display:flex; gap:24px; flex-wrap:wrap; }
+.hero > div { flex:1; min-width:240px; }
+.herobig {
+  font-family:"Archivo"; font-weight:700; font-size:44px; letter-spacing:-.03em;
+  line-height:1; font-variant-numeric:tabular-nums;
+}
+.herobig .of { font-size:18px; font-weight:500; color:var(--muted); letter-spacing:-.01em; }
+ol.plain { margin:10px 0 0; padding-left:20px; font-size:13.5px; color:var(--ink-2); }
+ol.plain li { margin-bottom:9px; }
+
+/* Status as a mark, not a word — a row's state should register before it is read. */
+.dot { width:8px; height:8px; border-radius:50%; flex:0 0 auto; background:var(--line-strong); }
+.dot.doing   { background:var(--accent); }
+.dot.blocked { background:var(--crit); }
+.dot.done    { background:var(--good); }
+.item .title { align-items:center; }
+
+/* The CVAT task number, next to the clip name — it is what a labeller actually types into CVAT. */
+.taskid {
+  font-family:"IBM Plex Mono"; font-size:12px; font-weight:600; color:var(--accent-ink);
+  background:var(--accent-soft); border-radius:4px; padding:1px 6px; flex:0 0 auto;
+}
+
+</style>
+<div id="root"></div>
+<script id="app-data" type="application/json">{"generated_at":"2026-08-27T16:43:29","date":"2026-08-27","exclude_classes":["side_kick"],"totals":{"clips":76,"spans":7196,"classes":30,"sources":62,"units":42,"cvat_tasks":121},"floors":{"BAG_FINE_MIN_COUNT":40,"BAG_FINE_MIN_TRAIN":0.55,"BAG_LEARNABLE_MIN":20,"BAG_CLASS_MIN_TRAIN":0.5,"BAG_VAL_TARGET_FRAC":0.25,"BAG_VAL_MAX_FRAC":0.35,"_fell_back":[]},"queue":[{"kind":"coverage","name":"square-on camera angle","score":95.0,"action":"film_athlete","action_label":"Film a new angle","spans":null,"sources":0,"units":null,"eff_units":null,"target":3,"summary":"every clip is side-on \u2014 only a front camera fixes it","reason":"Every one of the 74 clips is filmed from the side. From that angle a hook and a straight punch trace nearly the same shape, so the model cannot separate them however much gets labelled. Only a camera in front of the athlete fixes it."},{"kind":"class","name":"rear_body_hook","score":86.4,"action":"film_new_source","action_label":"Film a new source","spans":398,"sources":8,"units":6,"eff_units":1.66,"target":120,"reason":"398 examples but 76% come from one session \u2014 hold that session back for testing and only 96 are left to learn from, against the 219 needed; named wrong 153 times in testing \u2014 but the model finds these fine, so this is a data-splitting fix, not a filming one","summary":"76% from one session \u2014 96 left of the 219 needed"},{"kind":"coverage","name":"head kick footage","score":78.0,"action":"film_new_source","action_label":"Film head kicks","spans":79,"sources":null,"units":null,"eff_units":null,"target":400,"summary":"79 of 400 examples \u00b7 53 rear to 24 lead","reason":"The thinnest strike family in the set: 79 examples against a target of 400, and lopsided at 53 rear to 24 lead. Head kicks are also the hardest thing to film, so they will not accumulate on their own the way punches do."},{"kind":"coverage","name":"southpaw footage","score":70.0,"action":"film_athlete","action_label":"Film a southpaw","spans":null,"sources":2,"units":null,"eff_units":null,"target":5,"summary":"72 orthodox, 2 southpaw","reason":"72 orthodox against 2 southpaw, 0 of them in the test set. Right now a model that always guessed \"orthodox\" would score exactly the same."},{"kind":"coverage","name":"idle footage","score":60.0,"action":"film_athlete","action_label":"Film idle rounds","spans":null,"sources":0,"units":null,"eff_units":null,"target":3,"summary":"no footage without strikes in it","reason":"Rounds of warmup or shadowboxing with nothing thrown. Without any, there is no way to measure how often the model invents a strike that never happened."},{"kind":"class","name":"rear_head_hook","score":57.3,"action":"film_new_source","action_label":"Film a new source","spans":352,"sources":8,"units":6,"eff_units":1.83,"target":120,"reason":"352 examples but 72% come from one session \u2014 hold that session back for testing and only 100 are left to learn from, against the 194 needed","summary":"72% from one session \u2014 100 left of the 194 needed"},{"kind":"class","name":"rear_leg_kick","score":55.2,"action":"film_new_source","action_label":"Film a new source","spans":414,"sources":10,"units":7,"eff_units":2.26,"target":120,"reason":"414 examples but 64% come from one session \u2014 hold that session back for testing and only 148 are left to learn from, against the 228 needed; named wrong 54 times in testing \u2014 but the model finds these fine, so this is a data-splitting fix, not a filming one","summary":"64% from one session \u2014 148 left of the 228 needed"},{"kind":"class","name":"calf_kick","score":49.2,"action":"film_new_source","action_label":"Film a new source","spans":345,"sources":9,"units":6,"eff_units":2.0,"target":120,"reason":"345 examples but 67% come from one session \u2014 hold that session back for testing and only 114 are left to learn from, against the 190 needed","summary":"67% from one session \u2014 114 left of the 190 needed"}],"classes":[{"name":"head_jab","spans":1090,"sources":10,"clips":23,"units":10,"eff_units":6.23,"largest_unit":"spv_unknown_bagwork_mTeCh3XSiEA","largest_unit_spans":264,"largest_unit_share":0.242,"spans_outside_largest_unit":826,"protected":true,"train_floor":599.5,"floor_margin":226.5,"starves":false,"below_learnable":false,"target":120,"units_top":[["spv_unknown_bagwork_mTeCh3XSiEA",264],["spv_unknown_bagwork_24KEnA8nO4o",247],["spv_unknown_bagwork_MkHrv_B2oOQ",137],["spv_unknown_bagwork_ti8D1n157Qk",107],["spv_unknown_bagwork_ibkr30NvAO4",104],["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19",100]]},{"name":"head_cross","spans":624,"sources":9,"clips":21,"units":9,"eff_units":6.67,"largest_unit":"spv_unknown_bagwork_MkHrv_B2oOQ","largest_unit_spans":140,"largest_unit_share":0.224,"spans_outside_largest_unit":484,"protected":true,"train_floor":343.2,"floor_margin":140.8,"starves":false,"below_learnable":false,"target":120,"units_top":[["spv_unknown_bagwork_MkHrv_B2oOQ",140],["spv_unknown_bagwork_24KEnA8nO4o",120],["spv_unknown_bagwork_mTeCh3XSiEA",95],["spv_unknown_bagwork_ibkr30NvAO4",78],["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19",58],["spv_unknown_bagwork_ti8D1n157Qk",49]]},{"name":"rear_body_kick","spans":470,"sources":9,"clips":17,"units":9,"eff_units":3.99,"largest_unit":"spv_unknown_bagwork_MkHrv_B2oOQ","largest_unit_spans":207,"largest_unit_share":0.44,"spans_outside_largest_unit":263,"protected":true,"train_floor":258.5,"floor_margin":4.5,"starves":false,"below_learnable":false,"target":120,"units_top":[["spv_unknown_bagwork_MkHrv_B2oOQ",207],["spv_unknown_bagwork_24KEnA8nO4o",71],["spv_unknown_bagwork_rhouse_body",60],["spv_unknown_bagwork_ibkr30NvAO4",44],["spv_unknown_bagwork_unk_kick",29],["spv_unknown_bagwork_mTeCh3XSiEA",20]]},{"name":"rear_leg_kick","spans":414,"sources":10,"clips":18,"units":7,"eff_units":2.26,"largest_unit":"rear_leg_kick@main","largest_unit_spans":266,"largest_unit_share":0.643,"spans_outside_largest_unit":148,"protected":true,"train_floor":227.7,"floor_margin":-79.7,"starves":true,"below_learnable":false,"target":120,"units_top":[["rear_leg_kick@main",266],["spv_unknown_bagwork_mTeCh3XSiEA",49],["spv_unknown_bagwork_MkHrv_B2oOQ",39],["spv_unknown_bagwork_24KEnA8nO4o",23],["spv_unknown_bagwork_ti8D1n157Qk",15],["spv_unknown_bagwork_ibkr30NvAO4",13]]},{"name":"switch_kick","spans":401,"sources":11,"clips":16,"units":9,"eff_units":2.44,"largest_unit":"switch_kick@main","largest_unit_spans":247,"largest_unit_share":0.616,"spans_outside_largest_unit":154,"protected":true,"train_floor":220.6,"floor_margin":-66.6,"starves":true,"below_learnable":false,"target":120,"units_top":[["switch_kick@main",247],["spv_unknown_bagwork_24KEnA8nO4o",51],["spv_unknown_bagwork_ti8D1n157Qk",28],["spv_unknown_bagwork_Acc7R4cr6F4",25],["spv_unknown_bagwork_MkHrv_B2oOQ",21],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",16]]},{"name":"rear_body_hook","spans":398,"sources":8,"clips":9,"units":6,"eff_units":1.66,"largest_unit":"rear_body_hook@main","largest_unit_spans":302,"largest_unit_share":0.759,"spans_outside_largest_unit":96,"protected":true,"train_floor":218.9,"floor_margin":-122.9,"starves":true,"below_learnable":false,"target":120,"units_top":[["rear_body_hook@main",302],["rear_body_hook@liam",60],["spv_unknown_bagwork_MkHrv_B2oOQ",16],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",16],["spv_unknown_bagwork_ibkr30NvAO4",2],["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19",2]]},{"name":"knee","spans":354,"sources":6,"clips":8,"units":4,"eff_units":2.43,"largest_unit":"knee@main","largest_unit_spans":194,"largest_unit_share":0.548,"spans_outside_largest_unit":160,"protected":true,"train_floor":194.7,"floor_margin":-34.7,"starves":true,"below_learnable":false,"target":120,"units_top":[["knee@main",194],["spv_unknown_bagwork_ti8D1n157Qk",112],["spv_unknown_bagwork_ibkr30NvAO4",37],["spv_unknown_bagwork_Acc7R4cr6F4",11]]},{"name":"rear_head_hook","spans":352,"sources":8,"clips":9,"units":6,"eff_units":1.83,"largest_unit":"rear_head_hook@main","largest_unit_spans":252,"largest_unit_share":0.716,"spans_outside_largest_unit":100,"protected":true,"train_floor":193.6,"floor_margin":-93.6,"starves":true,"below_learnable":false,"target":120,"units_top":[["rear_head_hook@main",252],["rear_head_hook@liam",60],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",14],["spv_unknown_bagwork_MkHrv_B2oOQ",13],["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19",10],["spv_unknown_bagwork_ibkr30NvAO4",3]]},{"name":"elbow","spans":347,"sources":8,"clips":11,"units":7,"eff_units":2.79,"largest_unit":"elbow@main","largest_unit_spans":190,"largest_unit_share":0.548,"spans_outside_largest_unit":157,"protected":true,"train_floor":190.9,"floor_margin":-33.9,"starves":true,"below_learnable":false,"target":120,"units_top":[["elbow@main",190],["elbow@liam",72],["spv_unknown_bagwork_ti8D1n157Qk",27],["spv_unknown_bagwork_Acc7R4cr6F4",19],["spv_unknown_bagwork_mTeCh3XSiEA",19],["spv_unknown_bagwork_ibkr30NvAO4",19]]},{"name":"calf_kick","spans":345,"sources":9,"clips":9,"units":6,"eff_units":2.0,"largest_unit":"calf_kick@main","largest_unit_spans":231,"largest_unit_share":0.67,"spans_outside_largest_unit":114,"protected":true,"train_floor":189.8,"floor_margin":-75.8,"starves":true,"below_learnable":false,"target":120,"units_top":[["calf_kick@main",231],["calf_kick@liam",65],["calf_kick@demir",42],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",3],["spv_unknown_bagwork_ibkr30NvAO4",2],["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19",2]]},{"name":"rear_uppercut","spans":314,"sources":8,"clips":9,"units":7,"eff_units":2.56,"largest_unit":"rear_uppercut@main","largest_unit_spans":186,"largest_unit_share":0.592,"spans_outside_largest_unit":128,"protected":true,"train_floor":172.7,"floor_margin":-44.7,"starves":true,"below_learnable":false,"target":120,"units_top":[["rear_uppercut@main",186],["rear_uppercut@liam",45],["rear_uppercut@demir",37],["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19",15],["spv_unknown_bagwork_ibkr30NvAO4",13],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",10]]},{"name":"lead_body_hook","spans":305,"sources":8,"clips":9,"units":7,"eff_units":2.97,"largest_unit":"lead_body_hook@main","largest_unit_spans":159,"largest_unit_share":0.521,"spans_outside_largest_unit":146,"protected":true,"train_floor":167.8,"floor_margin":-21.8,"starves":true,"below_learnable":false,"target":120,"units_top":[["lead_body_hook@main",159],["lead_body_hook@liam",64],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",33],["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19",25],["spv_unknown_bagwork_ibkr30NvAO4",13],["spv_unknown_bagwork_MkHrv_B2oOQ",10]]},{"name":"lead_uppercut","spans":301,"sources":9,"clips":11,"units":7,"eff_units":2.13,"largest_unit":"lead_uppercut@main","largest_unit_spans":197,"largest_unit_share":0.654,"spans_outside_largest_unit":104,"protected":true,"train_floor":165.6,"floor_margin":-61.6,"starves":true,"below_learnable":false,"target":120,"units_top":[["lead_uppercut@main",197],["lead_uppercut@liam",46],["lead_uppercut@demir",39],["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19",9],["spv_unknown_bagwork_ibkr30NvAO4",7],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",2]]},{"name":"body_cross","spans":290,"sources":8,"clips":11,"units":7,"eff_units":3.61,"largest_unit":"body_cross@main","largest_unit_spans":124,"largest_unit_share":0.428,"spans_outside_largest_unit":166,"protected":true,"train_floor":159.5,"floor_margin":6.5,"starves":false,"below_learnable":false,"target":120,"units_top":[["body_cross@main",124],["body_cross@liam",75],["body_cross@imran",36],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",24],["spv_unknown_bagwork_ibkr30NvAO4",14],["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19",14]]},{"name":"lead_head_hook","spans":289,"sources":11,"clips":19,"units":11,"eff_units":9.45,"largest_unit":"spv_unknown_bagwork_mTeCh3XSiEA","largest_unit_spans":45,"largest_unit_share":0.156,"spans_outside_largest_unit":244,"protected":true,"train_floor":159.0,"floor_margin":85.0,"starves":false,"below_learnable":false,"target":120,"units_top":[["spv_unknown_bagwork_mTeCh3XSiEA",45],["spv_unknown_bagwork_ibkr30NvAO4",43],["spv_unknown_bagwork_24KEnA8nO4o",38],["spv_unknown_bagwork_MkHrv_B2oOQ",31],["spv_unknown_bagwork_ti8D1n157Qk",23],["lead_head_hook@main",23]]},{"name":"body_jab","spans":222,"sources":9,"clips":11,"units":9,"eff_units":3.95,"largest_unit":"body_jab@liam","largest_unit_spans":72,"largest_unit_share":0.324,"spans_outside_largest_unit":150,"protected":true,"train_floor":122.1,"floor_margin":27.9,"starves":false,"below_learnable":false,"target":120,"units_top":[["body_jab@liam",72],["body_jab@mart",65],["body_jab@main",53],["spv_unknown_bagwork_ibkr30NvAO4",13],["spv_unknown_bagwork_mTeCh3XSiEA",7],["spv_unknown_bagwork_MkHrv_B2oOQ",4]]},{"name":"lead_body_teep","spans":193,"sources":9,"clips":12,"units":9,"eff_units":4.24,"largest_unit":"spv_unknown_bagwork_MkHrv_B2oOQ","largest_unit_spans":73,"largest_unit_share":0.378,"spans_outside_largest_unit":120,"protected":true,"train_floor":106.2,"floor_margin":13.8,"starves":false,"below_learnable":false,"target":120,"units_top":[["spv_unknown_bagwork_MkHrv_B2oOQ",73],["spv_unknown_bagwork_ti8D1n157Qk",40],["spv_unknown_bagwork_ibkr30NvAO4",30],["spv_unknown_bagwork_bodyteep_1",27],["spv_unknown_bagwork_Acc7R4cr6F4",14],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",5]]},{"name":"lead_body_kick","spans":157,"sources":7,"clips":8,"units":7,"eff_units":4.03,"largest_unit":"spv_unknown_bagwork_rhouse_body","largest_unit_spans":60,"largest_unit_share":0.382,"spans_outside_largest_unit":97,"protected":true,"train_floor":86.4,"floor_margin":10.6,"starves":false,"below_learnable":false,"target":120,"units_top":[["spv_unknown_bagwork_rhouse_body",60],["spv_unknown_bagwork_ibkr30NvAO4",34],["spv_unknown_bagwork_unk_kick",29],["spv_unknown_bagwork_rhousebody_2",21],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",8],["spv_unknown_bagwork_mTeCh3XSiEA",4]]},{"name":"rear_body_teep","spans":153,"sources":8,"clips":11,"units":8,"eff_units":3.46,"largest_unit":"spv_unknown_bagwork_MkHrv_B2oOQ","largest_unit_spans":71,"largest_unit_share":0.464,"spans_outside_largest_unit":82,"protected":true,"train_floor":84.2,"floor_margin":-2.2,"starves":true,"below_learnable":false,"target":120,"units_top":[["spv_unknown_bagwork_MkHrv_B2oOQ",71],["rear_body_teep@main",34],["spv_unknown_bagwork_ti8D1n157Qk",18],["spv_unknown_bagwork_ibkr30NvAO4",12],["spv_unknown_bagwork_Acc7R4cr6F4",8],["spv_unknown_bagwork_bodyteep_1",6]]},{"name":"lead_leg_kick","spans":59,"sources":5,"clips":10,"units":5,"eff_units":2.75,"largest_unit":"spv_unknown_bagwork_MkHrv_B2oOQ","largest_unit_spans":31,"largest_unit_share":0.525,"spans_outside_largest_unit":28,"protected":true,"train_floor":32.5,"floor_margin":-4.5,"starves":true,"below_learnable":false,"target":200,"units_top":[["spv_unknown_bagwork_MkHrv_B2oOQ",31],["spv_unknown_bagwork_ti8D1n157Qk",16],["spv_unknown_bagwork_ibkr30NvAO4",5],["rear_leg_kick@main",4],["spv_unknown_bagwork_mTeCh3XSiEA",3]]},{"name":"rear_head_kick","spans":53,"sources":7,"clips":9,"units":7,"eff_units":3.22,"largest_unit":"spv_unknown_bagwork_Acc7R4cr6F4","largest_unit_spans":26,"largest_unit_share":0.491,"spans_outside_largest_unit":27,"protected":true,"train_floor":29.2,"floor_margin":-2.2,"starves":true,"below_learnable":false,"target":200,"units_top":[["spv_unknown_bagwork_Acc7R4cr6F4",26],["spv_unknown_bagwork_ibkr30NvAO4",11],["spv_unknown_bagwork_mTeCh3XSiEA",7],["spv_unknown_bagwork_MkHrv_B2oOQ",4],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",3],["spv_unknown_bagwork_rhouse_body",1]]},{"name":"lead_head_kick","spans":24,"sources":4,"clips":5,"units":4,"eff_units":2.5,"largest_unit":"spv_unknown_bagwork_Acc7R4cr6F4","largest_unit_spans":12,"largest_unit_share":0.5,"spans_outside_largest_unit":12,"protected":false,"train_floor":0.0,"floor_margin":null,"starves":false,"below_learnable":false,"target":200,"units_top":[["spv_unknown_bagwork_Acc7R4cr6F4",12],["spv_unknown_bagwork_ibkr30NvAO4",9],["spv_unknown_bagwork_mTeCh3XSiEA",2],["spv_unknown_bagwork_MkHrv_B2oOQ",1]]},{"name":"body_teep","spans":15,"sources":5,"clips":5,"units":5,"eff_units":2.42,"largest_unit":"spv_unknown_bagwork_ti8D1n157Qk","largest_unit_spans":9,"largest_unit_share":0.6,"spans_outside_largest_unit":6,"protected":false,"train_floor":0.0,"floor_margin":null,"starves":false,"below_learnable":true,"target":120,"units_top":[["spv_unknown_bagwork_ti8D1n157Qk",9],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",3],["spv_unknown_bagwork_Acc7R4cr6F4",1],["spv_unknown_bagwork_MkHrv_B2oOQ",1],["spv_unknown_bagwork_bodyteep_1",1]]},{"name":"side_kick","spans":7,"sources":1,"clips":1,"units":1,"eff_units":1.0,"largest_unit":"spv_unknown_bagwork_ibkr30NvAO4","largest_unit_spans":7,"largest_unit_share":1.0,"spans_outside_largest_unit":0,"protected":false,"train_floor":0.0,"floor_margin":null,"starves":false,"below_learnable":true,"target":80,"units_top":[["spv_unknown_bagwork_ibkr30NvAO4",7]]},{"name":"spinning_backfist","spans":6,"sources":1,"clips":2,"units":1,"eff_units":1.0,"largest_unit":"spv_unknown_bagwork_ibkr30NvAO4","largest_unit_spans":6,"largest_unit_share":1.0,"spans_outside_largest_unit":0,"protected":false,"train_floor":0.0,"floor_margin":null,"starves":false,"below_learnable":true,"target":80,"units_top":[["spv_unknown_bagwork_ibkr30NvAO4",6]]},{"name":"leg_teep","spans":3,"sources":2,"clips":2,"units":2,"eff_units":1.8,"largest_unit":"spv_unknown_bagwork_mTeCh3XSiEA","largest_unit_spans":2,"largest_unit_share":0.667,"spans_outside_largest_unit":1,"protected":false,"train_floor":0.0,"floor_margin":null,"starves":false,"below_learnable":true,"target":80,"units_top":[["spv_unknown_bagwork_mTeCh3XSiEA",2],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",1]]},{"name":"spinning_back_kick","spans":3,"sources":1,"clips":1,"units":1,"eff_units":1.0,"largest_unit":"spv_unknown_bagwork_ibkr30NvAO4","largest_unit_spans":3,"largest_unit_share":1.0,"spans_outside_largest_unit":0,"protected":false,"train_floor":0.0,"floor_margin":null,"starves":false,"below_learnable":true,"target":80,"units_top":[["spv_unknown_bagwork_ibkr30NvAO4",3]]},{"name":"roundhouse_body_kick","spans":3,"sources":3,"clips":3,"units":3,"eff_units":3.0,"largest_unit":"spv_unknown_bagwork_ibkr30NvAO4","largest_unit_spans":1,"largest_unit_share":0.333,"spans_outside_largest_unit":2,"protected":false,"train_floor":0.0,"floor_margin":null,"starves":false,"below_learnable":true,"target":120,"units_top":[["spv_unknown_bagwork_ibkr30NvAO4",1],["spv_unknown_bagwork_unk_kick",1],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",1]]},{"name":"outside_leg_kick","spans":2,"sources":2,"clips":2,"units":2,"eff_units":2.0,"largest_unit":"spv_unknown_bagwork_mTeCh3XSiEA","largest_unit_spans":1,"largest_unit_share":0.5,"spans_outside_largest_unit":1,"protected":false,"train_floor":0.0,"floor_margin":null,"starves":false,"below_learnable":true,"target":120,"units_top":[["spv_unknown_bagwork_mTeCh3XSiEA",1],["spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1",1]]},{"name":"question_mark_kick","spans":2,"sources":1,"clips":2,"units":1,"eff_units":1.0,"largest_unit":"spv_unknown_bagwork_ibkr30NvAO4","largest_unit_spans":2,"largest_unit_share":1.0,"spans_outside_largest_unit":0,"protected":false,"train_floor":0.0,"floor_margin":null,"starves":false,"below_learnable":true,"target":80,"units_top":[["spv_unknown_bagwork_ibkr30NvAO4",2]]}],"sided":[{"lead":"lead_leg_kick","rear":"rear_leg_kick","lead_spans":59,"rear_spans":414,"weak_side":"lead_leg_kick","weak_spans":59,"ratio":7.0,"one_sided":false},{"lead":"lead_body_kick","rear":"rear_body_kick","lead_spans":157,"rear_spans":470,"weak_side":"lead_body_kick","weak_spans":157,"ratio":3.0,"one_sided":false},{"lead":"lead_head_kick","rear":"rear_head_kick","lead_spans":24,"rear_spans":53,"weak_side":"lead_head_kick","weak_spans":24,"ratio":2.2,"one_sided":false},{"lead":"lead_body_teep","rear":"rear_body_teep","lead_spans":193,"rear_spans":153,"weak_side":"rear_body_teep","weak_spans":153,"ratio":1.3,"one_sided":false},{"lead":"lead_body_hook","rear":"rear_body_hook","lead_spans":305,"rear_spans":398,"weak_side":"lead_body_hook","weak_spans":305,"ratio":1.3,"one_sided":false},{"lead":"lead_head_hook","rear":"rear_head_hook","lead_spans":289,"rear_spans":352,"weak_side":"lead_head_hook","weak_spans":289,"ratio":1.2,"one_sided":false},{"lead":"lead_uppercut","rear":"rear_uppercut","lead_spans":301,"rear_spans":314,"weak_side":"lead_uppercut","weak_spans":301,"ratio":1.0,"one_sided":false}],"split":{"val_split.py":{"n_val_clips":16,"val_clips":["spv_unknown_bagwork_24KEnA8nO4o_seg1__579-753s","spv_unknown_bagwork_24KEnA8nO4o_seg2__894-1076s","spv_unknown_bagwork_24KEnA8nO4o_seg3__1234-1406s","spv_unknown_bagwork_24KEnA8nO4o_seg4__1555-1734s","spv_unknown_bagwork_24KEnA8nO4o_seg5__1887-2061s","spv_unknown_bagwork_calfkickliam_seg1__0-182s","spv_unknown_bagwork_mTeCh3XSiEA_seg1__727-907s","spv_unknown_bagwork_mTeCh3XSiEA_seg2__955-1136s","spv_unknown_bagwork_mTeCh3XSiEA_seg3__1183-1363s","spv_unknown_bagwork_mTeCh3XSiEA_seg4__1410-1597s","spv_unknown_bagwork_mTeCh3XSiEA_seg5__1644-1828s","spv_unknown_bagwork_rearbodhook_seg1__0-192s","spv_unknown_bagwork_rearbodyhook2_seg1__0-136s","spv_unknown_bagwork_rearbodyhook_seg1__0-329s","spv_unknown_bagwork_ti8D1n157Qk_seg1__171-500s","spv_unknown_bagwork_ti8D1n157Qk_seg2__500-825s"],"classes":[{"name":"head_jab","train":472,"val":618,"total":1090,"train_share":0.433,"no_val":false,"starved":true},{"name":"head_cross","train":360,"val":264,"total":624,"train_share":0.577,"no_val":false,"starved":false},{"name":"rear_body_kick","train":379,"val":91,"total":470,"train_share":0.806,"no_val":false,"starved":false},{"name":"rear_leg_kick","train":327,"val":87,"total":414,"train_share":0.79,"no_val":false,"starved":false},{"name":"switch_kick","train":318,"val":83,"total":401,"train_share":0.793,"no_val":false,"starved":false},{"name":"rear_body_hook","train":96,"val":302,"total":398,"train_share":0.241,"no_val":false,"starved":true},{"name":"knee","train":242,"val":112,"total":354,"train_share":0.684,"no_val":false,"starved":false},{"name":"rear_head_hook","train":352,"val":0,"total":352,"train_share":1.0,"no_val":true,"starved":false},{"name":"elbow","train":301,"val":46,"total":347,"train_share":0.867,"no_val":false,"starved":false},{"name":"calf_kick","train":280,"val":65,"total":345,"train_share":0.812,"no_val":false,"starved":false},{"name":"rear_uppercut","train":306,"val":8,"total":314,"train_share":0.975,"no_val":false,"starved":false},{"name":"lead_body_hook","train":305,"val":0,"total":305,"train_share":1.0,"no_val":true,"starved":false},{"name":"lead_uppercut","train":301,"val":0,"total":301,"train_share":1.0,"no_val":true,"starved":false},{"name":"body_cross","train":287,"val":3,"total":290,"train_share":0.99,"no_val":false,"starved":false},{"name":"lead_head_hook","train":183,"val":106,"total":289,"train_share":0.633,"no_val":false,"starved":false},{"name":"body_jab","train":212,"val":10,"total":222,"train_share":0.955,"no_val":false,"starved":false},{"name":"lead_body_teep","train":152,"val":41,"total":193,"train_share":0.788,"no_val":false,"starved":false},{"name":"lead_body_kick","train":152,"val":5,"total":157,"train_share":0.968,"no_val":false,"starved":false},{"name":"rear_body_teep","train":135,"val":18,"total":153,"train_share":0.882,"no_val":false,"starved":false},{"name":"lead_leg_kick","train":40,"val":19,"total":59,"train_share":0.678,"no_val":false,"starved":false},{"name":"rear_head_kick","train":46,"val":7,"total":53,"train_share":0.868,"no_val":false,"starved":false},{"name":"lead_head_kick","train":22,"val":2,"total":24,"train_share":0.917,"no_val":false,"starved":false},{"name":"body_teep","train":6,"val":9,"total":15,"train_share":0.4,"no_val":false,"starved":false},{"name":"side_kick","train":7,"val":0,"total":7,"train_share":1.0,"no_val":true,"starved":false},{"name":"spinning_backfist","train":6,"val":0,"total":6,"train_share":1.0,"no_val":true,"starved":false},{"name":"leg_teep","train":1,"val":2,"total":3,"train_share":0.333,"no_val":false,"starved":false},{"name":"roundhouse_body_kick","train":3,"val":0,"total":3,"train_share":1.0,"no_val":true,"starved":false},{"name":"spinning_back_kick","train":3,"val":0,"total":3,"train_share":1.0,"no_val":true,"starved":false},{"name":"outside_leg_kick","train":1,"val":1,"total":2,"train_share":0.5,"no_val":false,"starved":false},{"name":"question_mark_kick","train":2,"val":0,"total":2,"train_share":1.0,"no_val":true,"starved":false}]},"BAG_VAL_SUBJECTS":{"n_val_clips":19,"val_clips":["spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19_seg1__0-211s","spv_unknown_bagwork_bodycrossliam_seg1__0-133s","spv_unknown_bagwork_bodyjabliam_seg1__0-113s","spv_unknown_bagwork_calfkickliam_seg1__0-182s","spv_unknown_bagwork_elbowsliam_seg1__0-135s","spv_unknown_bagwork_leadbodyhooklia_seg1__0-123s","spv_unknown_bagwork_leadheadhookliam_seg1__0-63s","spv_unknown_bagwork_leadupperliam_seg1__0-95s","spv_unknown_bagwork_mTeCh3XSiEA_seg1__727-907s","spv_unknown_bagwork_mTeCh3XSiEA_seg2__955-1136s","spv_unknown_bagwork_mTeCh3XSiEA_seg3__1183-1363s","spv_unknown_bagwork_mTeCh3XSiEA_seg4__1410-1597s","spv_unknown_bagwork_mTeCh3XSiEA_seg5__1644-1828s","spv_unknown_bagwork_rearbodyhookliam_seg1__0-99s","spv_unknown_bagwork_rearheadhookliam_seg1__0-97s","spv_unknown_bagwork_rearupperliam_seg1__0-110s","spv_unknown_bagwork_ti8D1n157Qk_seg1__171-500s","spv_unknown_bagwork_ti8D1n157Qk_seg2__500-825s","spv_unknown_bagwork_unk_kick_seg1__0-149s"],"classes":[{"name":"head_jab","train":618,"val":472,"total":1090,"train_share":0.567,"no_val":false,"starved":false},{"name":"head_cross","train":422,"val":202,"total":624,"train_share":0.676,"no_val":false,"starved":false},{"name":"rear_body_kick","train":417,"val":53,"total":470,"train_share":0.887,"no_val":false,"starved":false},{"name":"rear_leg_kick","train":350,"val":64,"total":414,"train_share":0.845,"no_val":false,"starved":false},{"name":"switch_kick","train":365,"val":36,"total":401,"train_share":0.91,"no_val":false,"starved":false},{"name":"rear_body_hook","train":336,"val":62,"total":398,"train_share":0.844,"no_val":false,"starved":false},{"name":"knee","train":242,"val":112,"total":354,"train_share":0.684,"no_val":false,"starved":false},{"name":"rear_head_hook","train":282,"val":70,"total":352,"train_share":0.801,"no_val":false,"starved":false},{"name":"elbow","train":229,"val":118,"total":347,"train_share":0.66,"no_val":false,"starved":false},{"name":"calf_kick","train":278,"val":67,"total":345,"train_share":0.806,"no_val":false,"starved":false},{"name":"rear_uppercut","train":246,"val":68,"total":314,"train_share":0.783,"no_val":false,"starved":false},{"name":"lead_body_hook","train":216,"val":89,"total":305,"train_share":0.708,"no_val":false,"starved":false},{"name":"lead_uppercut","train":246,"val":55,"total":301,"train_share":0.817,"no_val":false,"starved":false},{"name":"body_cross","train":198,"val":92,"total":290,"train_share":0.683,"no_val":false,"starved":false},{"name":"lead_head_hook","train":184,"val":105,"total":289,"train_share":0.637,"no_val":false,"starved":false},{"name":"body_jab","train":138,"val":84,"total":222,"train_share":0.622,"no_val":false,"starved":false},{"name":"lead_body_teep","train":150,"val":43,"total":193,"train_share":0.777,"no_val":false,"starved":false},{"name":"lead_body_kick","train":124,"val":33,"total":157,"train_share":0.79,"no_val":false,"starved":false},{"name":"rear_body_teep","train":133,"val":20,"total":153,"train_share":0.869,"no_val":false,"starved":false},{"name":"lead_leg_kick","train":40,"val":19,"total":59,"train_share":0.678,"no_val":false,"starved":false},{"name":"rear_head_kick","train":45,"val":8,"total":53,"train_share":0.849,"no_val":false,"starved":false},{"name":"lead_head_kick","train":22,"val":2,"total":24,"train_share":0.917,"no_val":false,"starved":false},{"name":"body_teep","train":6,"val":9,"total":15,"train_share":0.4,"no_val":false,"starved":false},{"name":"side_kick","train":7,"val":0,"total":7,"train_share":1.0,"no_val":true,"starved":false},{"name":"spinning_backfist","train":6,"val":0,"total":6,"train_share":1.0,"no_val":true,"starved":false},{"name":"leg_teep","train":1,"val":2,"total":3,"train_share":0.333,"no_val":false,"starved":false},{"name":"roundhouse_body_kick","train":2,"val":1,"total":3,"train_share":0.667,"no_val":false,"starved":false},{"name":"spinning_back_kick","train":3,"val":0,"total":3,"train_share":1.0,"no_val":true,"starved":false},{"name":"outside_leg_kick","train":1,"val":1,"total":2,"train_share":0.5,"no_val":false,"starved":false},{"name":"question_mark_kick","train":2,"val":0,"total":2,"train_share":1.0,"no_val":true,"starved":false}]}},"errors":{"available":true,"n_clips":16,"total_clips":16,"blind_note":"detect_eval.json holds a val-only run: 16 clips scored, train is null. The model-error view is blind to the rest of the corpus.","roster":"val_split.py","headline":{"precision":0.7936655798789007,"recall":0.8973143759873617,"f1":0.8423133959466139,"gt_spans":1899,"joined_acc":0.7300469483568075,"tp":1704,"fp":443,"fn":195},"head_acc":{"category":0.9835680751173709,"target":0.8767605633802817,"side":0.8505221932114883,"trajectory":0.9436619718309859},"confusions":[{"gt":"rear_body_hook","pred":"rear_head_hook","n":130,"recall":0.9933774834437086,"train":96,"val":302,"eff_units":1.66,"why":"split artifact \u2014 found but misnamed","action":"re-split","members":["rear_body_hook"]},{"gt":"head_jab","pred":"head_cross","n":45,"recall":0.8705501618122977,"train":472,"val":618,"eff_units":6.23,"why":"model confusion on well-supported class","action":"review","members":["head_jab"]},{"gt":"rear_leg_kick","pred":"outside_leg_kick","n":44,"recall":1.0,"train":327,"val":87,"eff_units":2.26,"why":"split artifact \u2014 found but misnamed","action":"re-split","members":["rear_leg_kick"]},{"gt":"rear_body_hook","pred":"body_cross","n":23,"recall":0.9933774834437086,"train":96,"val":302,"eff_units":1.66,"why":"split artifact \u2014 found but misnamed","action":"re-split","members":["rear_body_hook"]},{"gt":"head_cross","pred":"head_jab","n":22,"recall":0.8181818181818182,"train":360,"val":264,"eff_units":6.67,"why":"model confusion on well-supported class","action":"review","members":["head_cross"]},{"gt":"rear_body_kick","pred":"roundhouse_body_kick","n":13,"recall":0.9655172413793104,"train":379,"val":91,"eff_units":3.99,"why":"split artifact \u2014 found but misnamed","action":"re-split","members":["rear_body_kick"]},{"gt":"head_jab","pred":"body_jab","n":13,"recall":0.8705501618122977,"train":472,"val":618,"eff_units":6.23,"why":"model confusion on well-supported class","action":"review","members":["head_jab"]},{"gt":"rear_leg_kick","pred":"roundhouse_body_kick","n":10,"recall":1.0,"train":327,"val":87,"eff_units":2.26,"why":"split artifact \u2014 found but misnamed","action":"re-split","members":["rear_leg_kick"]},{"gt":"lead_head_hook","pred":"head_jab","n":9,"recall":0.8018867924528302,"train":183,"val":106,"eff_units":9.45,"why":"model confusion on well-supported class","action":"review","members":["lead_head_hook"]},{"gt":"head_cross","pred":"lead_head_hook","n":7,"recall":0.8181818181818182,"train":360,"val":264,"eff_units":6.67,"why":"model confusion on well-supported class","action":"review","members":["head_cross"]},{"gt":"lead_body_teep","pred":"body_teep","n":7,"recall":1.0,"train":152,"val":41,"eff_units":4.24,"why":"model confusion on well-supported class","action":"review","members":["lead_body_teep"]},{"gt":"switch_kick","pred":"lead_body_kick","n":6,"recall":1.0,"train":318,"val":83,"eff_units":2.44,"why":"split artifact \u2014 found but misnamed","action":"re-split","members":["switch_kick"]},{"gt":"head_cross","pred":"rear_head_hook","n":6,"recall":0.8181818181818182,"train":360,"val":264,"eff_units":6.67,"why":"model confusion on well-supported class","action":"review","members":["head_cross"]},{"gt":"roundhouse_body_kick","pred":"switch_kick","n":6,"recall":1.0,"train":534,"val":96,"eff_units":4.03,"why":"model confusion on well-supported class","action":"review","members":["rear_body_kick","lead_body_kick","roundhouse_body_kick"]},{"gt":"lead_leg_kick","pred":"outside_leg_kick","n":5,"recall":1.0,"train":40,"val":19,"eff_units":2.75,"why":"thin train support","action":"film","members":["lead_leg_kick"]}],"fp_labels":{"head_cross":101,"head_jab":82,"roundhouse_body_kick":57,"rear_body_kick":21,"body_jab":18,"knee":16,"roundhouse_head_kick":16,"rear_body_teep":15,"switch_kick":14,"lead_body_kick":12},"no_val_support":["rear_head_hook","lead_body_hook","lead_uppercut"]},"people":{"rows":[{"username":"marcussiri","display":"Marcus","spans":2866,"since":0,"clips":30,"weekly_target":400,"week_spans":0,"week_pct":0.0,"shortfall":400,"known":true},{"username":"demird","display":"Demir","spans":2170,"since":0,"clips":24,"weekly_target":400,"week_spans":0,"week_pct":0.0,"shortfall":400,"known":true},{"username":"martinsiri","display":"Martin","spans":2160,"since":0,"clips":22,"weekly_target":600,"week_spans":0,"week_pct":0.0,"shortfall":600,"known":true},{"username":"imranmdv","display":"Imran","spans":0,"since":0,"clips":0,"weekly_target":400,"week_spans":0,"week_pct":0.0,"shortfall":400,"known":true}],"week_of":"2026-08-24","counting_since":"2026-08-27","history":[{"week":"2026-06-15","marcussiri":254},{"week":"2026-06-22","marcussiri":120,"martinsiri":196},{"week":"2026-06-29","marcussiri":155,"martinsiri":290},{"week":"2026-07-06","marcussiri":316,"martinsiri":127},{"week":"2026-07-13","demird":153,"marcussiri":50,"martinsiri":95},{"week":"2026-07-20","demird":582,"marcussiri":111,"martinsiri":285},{"week":"2026-07-27","marcussiri":337,"martinsiri":121,"demird":207},{"week":"2026-08-03","demird":476,"marcussiri":763,"martinsiri":633},{"week":"2026-08-10","martinsiri":413,"demird":484,"marcussiri":445},{"week":"2026-08-17","demird":268,"marcussiri":315}],"caveat":"Weekly counts are attributed to each task's last-touch date \u2014 CVAT stores one timestamp per task, not per span. Exact velocity begins from the first snapshot."},"athletes":[{"athlete":"main","clips":40,"spans":3308},{"athlete":"youtube","clips":20,"spans":3071},{"athlete":"liam","clips":10,"spans":579},{"athlete":"demir","clips":4,"spans":137},{"athlete":"mart","clips":1,"spans":65},{"athlete":"imran","clips":1,"spans":36}],"coverage":{"camera":{"measured":74,"unmeasured":2,"median":0.417,"max":0.598,"square_on":0,"square_on_clips":[],"target":3,"threshold":1.0},"stance":{"measured":74,"orthodox":72,"southpaw":2,"southpaw_clips":["spv_unknown_bagwork_MkHrv_B2oOQ_seg1__19-190s","spv_unknown_bagwork_legkick4_seg1__0-174s"],"southpaw_in_val":0,"target":5},"head_kick":{"spans":79,"target":400,"lead":24,"rear":53,"by_class":{"rear_head_kick":53,"lead_head_kick":24,"question_mark_kick":2}},"idle":{"clips":0,"target":3,"note":"idle_fp.py cannot bound the hallucination rate without dedicated warmup/shadowboxing footage containing no strikes at all."}},"camera_per_clip":[["spv_unknown_bagwork_leaduppercut_seg1__0-191s",0.598],["spv_unknown_bagwork_leadheadhook_seg1__0-81s",0.578],["spv_unknown_bagwork_rearuppercut_seg1__0-174s",0.571],["spv_unknown_bagwork_calfkick_seg1__0-165s",0.561],["spv_unknown_bagwork_rearheadhook_seg1__0-305s",0.55],["spv_unknown_bagwork_ibkr30NvAO4_seg1__85-375s",0.548],["spv_unknown_bagwork_bodyjabmart_seg1__0-161s",0.545],["spv_unknown_bagwork_lead_uppercut_seg1__0-393s",0.544],["spv_unknown_bagwork_leadheadhookdemir_seg1__0-34s",0.521],["spv_unknown_bagwork_MkHrv_B2oOQ_seg1__19-190s",0.509],["spv_unknown_bagwork_MkHrv_B2oOQ_seg3__430-635s",0.5],["spv_unknown_bagwork_rearbodyhook_seg1__0-329s",0.499],["spv_unknown_bagwork_laedbodhook_seg1__0-237s",0.487],["spv_unknown_bagwork_bodyjab2_seg1__0-119s",0.482],["spv_unknown_bagwork_Acc7R4cr6F4_seg1__20-209s",0.478],["spv_unknown_bagwork_bodycrossimran_seg1__0-183s",0.465],["spv_unknown_bagwork_leadbodyhoook_seg1__0-141s",0.465],["spv_unknown_bagwork_leaduppersdemir_seg1__0-70s",0.461],["spv_unknown_bagwork_24KEnA8nO4o_seg3__1234-1406s",0.456],["spv_unknown_bagwork_bodcross_seg1__0-167s",0.456],["spv_unknown_bagwork_rearheadhooik_seg1__0-151s",0.455],["spv_unknown_bagwork_ti8D1n157Qk_seg2__500-825s",0.45],["spv_unknown_bagwork_bodycrossliam_seg1__0-133s",0.449],["spv_unknown_bagwork_elbow_seg1__0-141s",0.449],["spv_unknown_bagwork_mTeCh3XSiEA_seg2__955-1136s",0.447],["spv_unknown_bagwork_24KEnA8nO4o_seg1__579-753s",0.446],["spv_unknown_bagwork_mTeCh3XSiEA_seg3__1183-1363s",0.443],["spv_unknown_bagwork_rearcalf_seg1__0-81s",0.439],["spv_unknown_bagwork_rear_uppercut_seg1__0-379s",0.435],["spv_unknown_bagwork_leadbodyhooklia_seg1__0-123s",0.432],["spv_unknown_bagwork_bodyjabliam_seg1__0-113s",0.43],["spv_unknown_bagwork_24KEnA8nO4o_seg2__894-1076s",0.429],["spv_unknown_bagwork_rearupperliam_seg1__0-110s",0.422],["spv_unknown_bagwork_leadupperliam_seg1__0-95s",0.418],["spv_unknown_bagwork_rearbodyhookliam_seg1__0-99s",0.418],["spv_unknown_bagwork_rearheadhookliam_seg1__0-97s",0.418],["spv_unknown_bagwork_mTeCh3XSiEA_seg4__1410-1597s",0.417],["spv_unknown_bagwork_rearbodhook_seg1__0-192s",0.417],["spv_unknown_bagwork_legkick4_seg1__0-174s",0.415],["spv_unknown_bagwork_24KEnA8nO4o_seg5__1887-2061s",0.413],["spv_unknown_bagwork_MkHrv_B2oOQ_seg4__685-852s",0.412],["spv_unknown_bagwork_elbowsliam_seg1__0-135s",0.409],["spv_unknown_bagwork_mTeCh3XSiEA_seg5__1644-1828s",0.409],["spv_unknown_bagwork_24KEnA8nO4o_seg4__1555-1734s",0.395],["spv_unknown_bagwork_mTeCh3XSiEA_seg1__727-907s",0.393],["spv_unknown_bagwork_switchkick3_seg1__0-119s",0.388],["spv_unknown_bagwork_ibkr30NvAO4_seg1__486-799s",0.387],["spv_unknown_bagwork_calfkickliam_seg1__0-182s",0.378],["spv_unknown_bagwork_rhouse_body_seg1__0-481s",0.376],["spv_unknown_bagwork_switchkick2_seg1__0-297s",0.365],["spv_unknown_bagwork_leaduppercut2_seg1__0-131s",0.361],["spv_unknown_bagwork_elbow2_seg1__0-46s",0.358],["spv_unknown_bagwork_legkick2_seg1__0-348s",0.358],["spv_unknown_bagwork_ibkr30NvAO4_seg3__891-1177s",0.357],["spv_unknown_bagwork_unk_kick_seg1__0-149s",0.356],["spv_unknown_bagwork_switch_kick_seg1__0-481s",0.354],["spv_unknown_bagwork_ti8D1n157Qk_seg1__171-500s",0.354],["spv_unknown_bagwork_calfkicks_seg1__0-143s",0.351],["spv_unknown_bagwork_bodyteep_2_seg1__0-112s",0.346],["spv_unknown_bagwork_MkHrv_B2oOQ_seg2__242-415s",0.33],["spv_unknown_bagwork_bodyteep_1_seg1__0-134s",0.327],["spv_unknown_bagwork_knee_seg1__0-320s",0.324],["spv_unknown_bagwork_knee2_seg1__0-79s",0.313],["spv_unknown_bagwork_rearheadhook2_seg1__0-155s",0.313],["spv_unknown_bagwork_rearuppersdemir_seg1__0-71s",0.288],["spv_unknown_bagwork_rhousebody_2_seg1__0-132s",0.283],["spv_unknown_bagwork_bodycross2_seg1__0-160s",0.281],["spv_unknown_bagwork_rearbodyhook2_seg1__0-136s",0.279],["spv_unknown_bagwork_legkick_1_seg1__0-150s",0.246],["spv_unknown_bagwork_knee3_seg1__0-123s",0.242],["spv_unknown_bagwork_leadheadhookliam_seg1__0-63s",0.235],["spv_unknown_bagwork_calfkick2_seg1__0-140s",0.233],["spv_unknown_bagwork_legkick_3_seg1__0-109s",0.193],["spv_unknown_bagwork_calfkicksdemir_seg1__0-75s",0.176]],"combos":{"window":20,"overall":0.275,"combo_spans":1977,"total_spans":7196,"per_clip":[{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg3__1234-1406s","file":"193.xml","spans":129,"combo":114,"share":0.884,"classes":4},{"video_id":"spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19_seg1__0-211s","file":"264.xml","spans":268,"combo":234,"share":0.873,"classes":16},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg5__1887-2061s","file":"169.xml","spans":120,"combo":98,"share":0.817,"classes":6},{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg2__242-415s","file":"182.xml","spans":290,"combo":226,"share":0.779,"classes":12},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg4__1555-1734s","file":"194.xml","spans":117,"combo":85,"share":0.726,"classes":4},{"video_id":"spv_unknown_bagwork_ibkr30NvAO4_seg1__85-375s","file":"200.xml","spans":193,"combo":126,"share":0.653,"classes":10},{"video_id":"spv_unknown_bagwork_Acc7R4cr6F4_seg1__20-209s","file":"186.xml","spans":210,"combo":128,"share":0.61,"classes":11},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg1__727-907s","file":"195.xml","spans":106,"combo":64,"share":0.604,"classes":7},{"video_id":"spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1_seg1__0-375s","file":"265.xml","spans":315,"combo":190,"share":0.603,"classes":23},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg3__1183-1363s","file":"197.xml","spans":153,"combo":87,"share":0.569,"classes":7},{"video_id":"spv_unknown_bagwork_ti8D1n157Qk_seg1__171-500s","file":"175.xml","spans":254,"combo":143,"share":0.563,"classes":7},{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg4__685-852s","file":"203.xml","spans":198,"combo":106,"share":0.535,"classes":8},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg2__955-1136s","file":"196.xml","spans":127,"combo":60,"share":0.472,"classes":7},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg5__1644-1828s","file":"199.xml","spans":95,"combo":44,"share":0.463,"classes":6},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg2__894-1076s","file":"192.xml","spans":111,"combo":50,"share":0.45,"classes":5},{"video_id":"spv_unknown_bagwork_ibkr30NvAO4_seg3__891-1177s","file":"201.xml","spans":167,"combo":64,"share":0.383,"classes":25},{"video_id":"spv_unknown_bagwork_elbow_seg1__0-141s","file":"222.xml","spans":140,"combo":48,"share":0.343,"classes":1},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg1__579-753s","file":"191.xml","spans":74,"combo":18,"share":0.243,"classes":3},{"video_id":"spv_unknown_bagwork_ibkr30NvAO4_seg1__486-799s","file":"204.xml","spans":170,"combo":35,"share":0.206,"classes":20},{"video_id":"spv_unknown_bagwork_leaduppercut2_seg1__0-131s","file":"238.xml","spans":49,"combo":8,"share":0.163,"classes":1},{"video_id":"spv_unknown_bagwork_ti8D1n157Qk_seg2__500-825s","file":"176.xml","spans":196,"combo":27,"share":0.138,"classes":11},{"video_id":"spv_unknown_bagwork_bodyjabmart_seg1__0-161s","file":"252.xml","spans":65,"combo":8,"share":0.123,"classes":1},{"video_id":"spv_unknown_bagwork_elbow2_seg1__0-46s","file":"223.xml","spans":50,"combo":4,"share":0.08,"classes":1},{"video_id":"spv_unknown_bagwork_rearbodyhook2_seg1__0-136s","file":"235.xml","spans":61,"combo":4,"share":0.066,"classes":1},{"video_id":"spv_unknown_bagwork_bodyjabliam_seg1__0-113s","file":"245.xml","spans":72,"combo":2,"share":0.028,"classes":1},{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg3__430-635s","file":"202.xml","spans":156,"combo":2,"share":0.013,"classes":9},{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg1__19-190s","file":"181.xml","spans":155,"combo":2,"share":0.013,"classes":5},{"video_id":"spv_unknown_bagwork_rearbodyhook_seg1__0-329s","file":"225.xml","spans":164,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rear_uppercut_seg1__0-379s","file":"212.xml","spans":130,"combo":0,"share":0.0,"classes":2},{"video_id":"spv_unknown_bagwork_rhouse_body_seg1__0-481s","file":"210.xml","spans":121,"combo":0,"share":0.0,"classes":3},{"video_id":"spv_unknown_bagwork_switch_kick_seg1__0-481s","file":"211.xml","spans":119,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearheadhook_seg1__0-305s","file":"229.xml","spans":118,"combo":0,"share":0.0,"classes":2},{"video_id":"spv_unknown_bagwork_legkick2_seg1__0-348s","file":"209.xml","spans":112,"combo":0,"share":0.0,"classes":3},{"video_id":"spv_unknown_bagwork_knee_seg1__0-320s","file":"207.xml","spans":108,"combo":0,"share":0.0,"classes":2},{"video_id":"spv_unknown_bagwork_switchkick2_seg1__0-297s","file":"220.xml","spans":88,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_laedbodhook_seg1__0-237s","file":"250.xml","spans":87,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_calfkick_seg1__0-165s","file":"232.xml","spans":79,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearbodhook_seg1__0-192s","file":"251.xml","spans":77,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_leaduppercut_seg1__0-191s","file":"230.xml","spans":76,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_bodycrossliam_seg1__0-133s","file":"247.xml","spans":75,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_lead_uppercut_seg1__0-393s","file":"213.xml","spans":72,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_elbowsliam_seg1__0-135s","file":"241.xml","spans":72,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_leadbodyhoook_seg1__0-141s","file":"260.xml","spans":72,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearheadhooik_seg1__0-151s","file":"253.xml","spans":70,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_legkick4_seg1__0-174s","file":"217.xml","spans":69,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearheadhook2_seg1__0-155s","file":"236.xml","spans":66,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_leadbodyhooklia_seg1__0-123s","file":"246.xml","spans":65,"combo":0,"share":0.0,"classes":2},{"video_id":"spv_unknown_bagwork_calfkickliam_seg1__0-182s","file":"248.xml","spans":65,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_bodcross_seg1__0-167s","file":"249.xml","spans":63,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_bodycross2_seg1__0-160s","file":"233.xml","spans":61,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearheadhookliam_seg1__0-97s","file":"243.xml","spans":60,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearbodyhookliam_seg1__0-99s","file":"244.xml","spans":60,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_knee3_seg1__0-123s","file":"215.xml","spans":59,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_unk_kick_seg1__0-149s","file":"219.xml","spans":59,"combo":0,"share":0.0,"classes":3},{"video_id":"spv_unknown_bagwork_calfkick2_seg1__0-140s","file":"237.xml","spans":58,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearuppercut_seg1__0-174s","file":"226.xml","spans":57,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_calfkicks_seg1__0-143s","file":"254.xml","spans":57,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_bodyjab2_seg1__0-119s","file":"234.xml","spans":53,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_legkick_1_seg1__0-150s","file":"208.xml","spans":52,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg4__1410-1597s","file":"198.xml","spans":50,"combo":0,"share":0.0,"classes":10},{"video_id":"spv_unknown_bagwork_leadupperliam_seg1__0-95s","file":"242.xml","spans":46,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearupperliam_seg1__0-110s","file":"240.xml","spans":45,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_calfkicksdemir_seg1__0-75s","file":"257.xml","spans":42,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rhousebody_2_seg1__0-132s","file":"218.xml","spans":41,"combo":0,"share":0.0,"classes":2},{"video_id":"spv_unknown_bagwork_switchkick3_seg1__0-119s","file":"221.xml","spans":40,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_leaduppersdemir_seg1__0-70s","file":"259.xml","spans":39,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_legkick_3_seg1__0-109s","file":"216.xml","spans":38,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearcalf_seg1__0-81s","file":"224.xml","spans":37,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_rearuppersdemir_seg1__0-71s","file":"255.xml","spans":37,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_bodycrossimran_seg1__0-183s","file":"261.xml","spans":36,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_bodyteep_2_seg1__0-112s","file":"206.xml","spans":35,"combo":0,"share":0.0,"classes":2},{"video_id":"spv_unknown_bagwork_bodyteep_1_seg1__0-134s","file":"205.xml","spans":34,"combo":0,"share":0.0,"classes":3},{"video_id":"spv_unknown_bagwork_knee2_seg1__0-79s","file":"214.xml","spans":30,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_leadheadhook_seg1__0-81s","file":"227.xml","spans":23,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_leadheadhookliam_seg1__0-63s","file":"239.xml","spans":19,"combo":0,"share":0.0,"classes":1},{"video_id":"spv_unknown_bagwork_leadheadhookdemir_seg1__0-34s","file":"258.xml","spans":19,"combo":0,"share":0.0,"classes":1}]},"pipeline":{"rows":[{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg5__1887-2061s","file":"169.xml","task_id":"169","spans":120,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_ti8D1n157Qk_seg1__171-500s","file":"175.xml","task_id":"175","spans":254,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_ti8D1n157Qk_seg2__500-825s","file":"176.xml","task_id":"176","spans":196,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg1__19-190s","file":"181.xml","task_id":"181","spans":155,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg2__242-415s","file":"182.xml","task_id":"182","spans":290,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_Acc7R4cr6F4_seg1__20-209s","file":"186.xml","task_id":"186","spans":210,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg1__579-753s","file":"191.xml","task_id":"191","spans":74,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg2__894-1076s","file":"192.xml","task_id":"192","spans":111,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg3__1234-1406s","file":"193.xml","task_id":"193","spans":129,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg4__1555-1734s","file":"194.xml","task_id":"194","spans":117,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg1__727-907s","file":"195.xml","task_id":"195","spans":106,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg2__955-1136s","file":"196.xml","task_id":"196","spans":127,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg3__1183-1363s","file":"197.xml","task_id":"197","spans":153,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg4__1410-1597s","file":"198.xml","task_id":"198","spans":50,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg5__1644-1828s","file":"199.xml","task_id":"199","spans":95,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_ibkr30NvAO4_seg1__85-375s","file":"200.xml","task_id":"200","spans":193,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_ibkr30NvAO4_seg3__891-1177s","file":"201.xml","task_id":"201","spans":167,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg3__430-635s","file":"202.xml","task_id":"202","spans":156,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg4__685-852s","file":"203.xml","task_id":"203","spans":198,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_ibkr30NvAO4_seg1__486-799s","file":"204.xml","task_id":"204","spans":170,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"new"},{"video_id":"spv_unknown_bagwork_bodyteep_1_seg1__0-134s","file":"205.xml","task_id":"205","spans":34,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_bodyteep_2_seg1__0-112s","file":"206.xml","task_id":"206","spans":35,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_knee_seg1__0-320s","file":"207.xml","task_id":"207","spans":108,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_legkick_1_seg1__0-150s","file":"208.xml","task_id":"208","spans":52,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_legkick2_seg1__0-348s","file":"209.xml","task_id":"209","spans":112,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rhouse_body_seg1__0-481s","file":"210.xml","task_id":"210","spans":121,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"completed"},{"video_id":"spv_unknown_bagwork_switch_kick_seg1__0-481s","file":"211.xml","task_id":"211","spans":119,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"completed"},{"video_id":"spv_unknown_bagwork_rear_uppercut_seg1__0-379s","file":"212.xml","task_id":"212","spans":130,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_lead_uppercut_seg1__0-393s","file":"213.xml","task_id":"213","spans":72,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_knee2_seg1__0-79s","file":"214.xml","task_id":"214","spans":30,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_knee3_seg1__0-123s","file":"215.xml","task_id":"215","spans":59,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_legkick_3_seg1__0-109s","file":"216.xml","task_id":"216","spans":38,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_legkick4_seg1__0-174s","file":"217.xml","task_id":"217","spans":69,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rhousebody_2_seg1__0-132s","file":"218.xml","task_id":"218","spans":41,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_unk_kick_seg1__0-149s","file":"219.xml","task_id":"219","spans":59,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":true,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_switchkick2_seg1__0-297s","file":"220.xml","task_id":"220","spans":88,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_switchkick3_seg1__0-119s","file":"221.xml","task_id":"221","spans":40,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_elbow_seg1__0-141s","file":"222.xml","task_id":"222","spans":140,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_elbow2_seg1__0-46s","file":"223.xml","task_id":"223","spans":50,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearcalf_seg1__0-81s","file":"224.xml","task_id":"224","spans":37,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearbodyhook_seg1__0-329s","file":"225.xml","task_id":"225","spans":164,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearuppercut_seg1__0-174s","file":"226.xml","task_id":"226","spans":57,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_leadheadhook_seg1__0-81s","file":"227.xml","task_id":"227","spans":23,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearheadhook_seg1__0-305s","file":"229.xml","task_id":"229","spans":118,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_leaduppercut_seg1__0-191s","file":"230.xml","task_id":"230","spans":76,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_calfkick_seg1__0-165s","file":"232.xml","task_id":"232","spans":79,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_bodycross2_seg1__0-160s","file":"233.xml","task_id":"233","spans":61,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_bodyjab2_seg1__0-119s","file":"234.xml","task_id":"234","spans":53,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearbodyhook2_seg1__0-136s","file":"235.xml","task_id":"235","spans":61,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearheadhook2_seg1__0-155s","file":"236.xml","task_id":"236","spans":66,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_calfkick2_seg1__0-140s","file":"237.xml","task_id":"237","spans":58,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_leaduppercut2_seg1__0-131s","file":"238.xml","task_id":"238","spans":49,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_leadheadhookliam_seg1__0-63s","file":"239.xml","task_id":"239","spans":19,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearupperliam_seg1__0-110s","file":"240.xml","task_id":"240","spans":45,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_elbowsliam_seg1__0-135s","file":"241.xml","task_id":"241","spans":72,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_leadupperliam_seg1__0-95s","file":"242.xml","task_id":"242","spans":46,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearheadhookliam_seg1__0-97s","file":"243.xml","task_id":"243","spans":60,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearbodyhookliam_seg1__0-99s","file":"244.xml","task_id":"244","spans":60,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_bodyjabliam_seg1__0-113s","file":"245.xml","task_id":"245","spans":72,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_leadbodyhooklia_seg1__0-123s","file":"246.xml","task_id":"246","spans":65,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_bodycrossliam_seg1__0-133s","file":"247.xml","task_id":"247","spans":75,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_calfkickliam_seg1__0-182s","file":"248.xml","task_id":"248","spans":65,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_bodcross_seg1__0-167s","file":"249.xml","task_id":"249","spans":63,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_laedbodhook_seg1__0-237s","file":"250.xml","task_id":"250","spans":87,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearbodhook_seg1__0-192s","file":"251.xml","task_id":"251","spans":77,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_bodyjabmart_seg1__0-161s","file":"252.xml","task_id":"252","spans":65,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearheadhooik_seg1__0-151s","file":"253.xml","task_id":"253","spans":70,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_calfkicks_seg1__0-143s","file":"254.xml","task_id":"254","spans":57,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_rearuppersdemir_seg1__0-71s","file":"255.xml","task_id":"255","spans":37,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_calfkicksdemir_seg1__0-75s","file":"257.xml","task_id":"257","spans":42,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_leadheadhookdemir_seg1__0-34s","file":"258.xml","task_id":"258","spans":19,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_leaduppersdemir_seg1__0-70s","file":"259.xml","task_id":"259","spans":39,"assignee":"martinsiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_leadbodyhoook_seg1__0-141s","file":"260.xml","task_id":"260","spans":72,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_bodycrossimran_seg1__0-183s","file":"261.xml","task_id":"261","spans":36,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":true,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":null},"furthest":"exported","complete":true,"pose_known":true,"needs_kick_review":false,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19_seg1__0-211s","file":"264.xml","task_id":"264","spans":268,"assignee":"demird","stages":{"downloaded":null,"pose_extracted":null,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":false,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"},{"video_id":"spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1_seg1__0-375s","file":"265.xml","task_id":"265","spans":315,"assignee":"marcussiri","stages":{"downloaded":null,"pose_extracted":null,"uploaded":true,"labelled":true,"exported":true,"kick_reviewed":true},"furthest":"kick_reviewed","complete":true,"pose_known":false,"needs_kick_review":true,"export_stale":null,"idle_days":1.5,"cvat_status":"annotation","job_state":"in progress"}],"stage_counts":{"downloaded":0,"pose_extracted":74,"uploaded":76,"labelled":76,"exported":76,"kick_reviewed":29},"stage_unknown":{"downloaded":76,"pose_extracted":2,"uploaded":0,"labelled":0,"exported":0,"kick_reviewed":47},"stage_labels":{"downloaded":"Downloaded & normalised","pose_extracted":"Pose extracted","uploaded":"Uploaded to CVAT","labelled":"Labelled","exported":"Exported","kick_reviewed":"Kick-side reviewed"},"stages":["downloaded","pose_extracted","uploaded","labelled","exported","kick_reviewed"],"n_clips":76,"stuck":[],"stuck_days":10,"unexported":[{"task_id":263,"name":"spv_unknown_bagwork_demirbodyjab_seg1__0-111s","assignee":"martinsiri","status":"annotation","idle_days":1.5,"age_days":8.6,"state":"in progress"},{"task_id":262,"name":"spv_unknown_bagwork_demirbodycross_seg1__0-82s","assignee":"demird","status":"annotation","idle_days":1.5,"age_days":8.6,"state":"in progress"},{"task_id":256,"name":"spv_unknown_bagwork_rearbodyhookde_seg1__0-232s","assignee":"martinsiri","status":"annotation","idle_days":1.5,"age_days":20.4,"state":"in progress"},{"task_id":228,"name":"spv_unknown_bagwork_leadbodyhook_seg1__0-297s","assignee":"demird","status":"annotation","idle_days":1.5,"age_days":25.5,"state":"in progress"},{"task_id":300,"name":"spv_unknown_bagwork__azD6pM9kcc_seg2__332-665s","assignee":"martinsiri","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":299,"name":"spv_unknown_bagwork__azD6pM9kcc_seg1__0-332s","assignee":"marcussiri","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":298,"name":"spv_unknown_bagwork_xAbPB8Ug3mU_seg2__350-701s","assignee":"demird","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":311,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg3__809-1213s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":310,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg2__404-809s","assignee":"marcussiri","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":309,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg1__0-404s","assignee":"demird","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":308,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg4__1404-1872s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":307,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg3__936-1404s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":306,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg2__468-936s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":305,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg1__0-468s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":304,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg4__1713-2284s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":303,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg3__1142-1713s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":302,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg2__571-1142s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":301,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg1__0-571s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":297,"name":"spv_unknown_bagwork_xAbPB8Ug3mU_seg1__0-350s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":296,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg4__1458-1945s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":295,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg3__972-1458s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":294,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg2__486-972s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":293,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg1__0-486s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":292,"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg2__437-874s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":291,"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg1__0-437s","assignee":"marcussiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":290,"name":"spv_unknown_bagwork_JzvLsNQvtp0_seg2__471-943s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.6,"state":"new"},{"task_id":289,"name":"spv_unknown_bagwork_JzvLsNQvtp0_seg1__0-471s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.6,"state":"new"},{"task_id":231,"name":"spv_unknown_bagwork_bodycross_seg1__0-297s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":25.5,"state":"new"}],"awaiting_export":[],"awaiting_label":[{"task_id":228,"name":"spv_unknown_bagwork_leadbodyhook_seg1__0-297s","assignee":"demird","status":"annotation","idle_days":1.5,"age_days":25.5,"state":"in progress"},{"task_id":256,"name":"spv_unknown_bagwork_rearbodyhookde_seg1__0-232s","assignee":"martinsiri","status":"annotation","idle_days":1.5,"age_days":20.4,"state":"in progress"},{"task_id":263,"name":"spv_unknown_bagwork_demirbodyjab_seg1__0-111s","assignee":"martinsiri","status":"annotation","idle_days":1.5,"age_days":8.6,"state":"in progress"},{"task_id":262,"name":"spv_unknown_bagwork_demirbodycross_seg1__0-82s","assignee":"demird","status":"annotation","idle_days":1.5,"age_days":8.6,"state":"in progress"},{"task_id":231,"name":"spv_unknown_bagwork_bodycross_seg1__0-297s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":25.5,"state":"new"},{"task_id":290,"name":"spv_unknown_bagwork_JzvLsNQvtp0_seg2__471-943s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.6,"state":"new"},{"task_id":289,"name":"spv_unknown_bagwork_JzvLsNQvtp0_seg1__0-471s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.6,"state":"new"},{"task_id":300,"name":"spv_unknown_bagwork__azD6pM9kcc_seg2__332-665s","assignee":"martinsiri","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":299,"name":"spv_unknown_bagwork__azD6pM9kcc_seg1__0-332s","assignee":"marcussiri","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":298,"name":"spv_unknown_bagwork_xAbPB8Ug3mU_seg2__350-701s","assignee":"demird","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":297,"name":"spv_unknown_bagwork_xAbPB8Ug3mU_seg1__0-350s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":296,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg4__1458-1945s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":295,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg3__972-1458s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":294,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg2__486-972s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":293,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg1__0-486s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":292,"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg2__437-874s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":291,"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg1__0-437s","assignee":"marcussiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":308,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg4__1404-1872s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":307,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg3__936-1404s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":306,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg2__468-936s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":305,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg1__0-468s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":304,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg4__1713-2284s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":303,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg3__1142-1713s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":302,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg2__571-1142s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":301,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg1__0-571s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":311,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg3__809-1213s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":310,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg2__404-809s","assignee":"marcussiri","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":309,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg1__0-404s","assignee":"demird","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"}],"duplicate_tasks":[{"name":"spv_unknown_bagwork_ibkr30NvAO4_seg1__486-799s","task_ids":[185,188,189,190,204],"assignees":["demird","marcussiri"],"exported":true,"keep":[204],"empty":[185,188,189,190],"spans":170},{"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg4__685-852s","task_ids":[184,203],"assignees":["demird","marcussiri"],"exported":true,"keep":[203],"empty":[184],"spans":198},{"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg3__430-635s","task_ids":[183,202],"assignees":["demird","martinsiri"],"exported":true,"keep":[202],"empty":[183],"spans":156},{"name":"spv_unknown_bagwork_ibkr30NvAO4_seg3__891-1177s","task_ids":[179,201],"assignees":["marcussiri","martinsiri"],"exported":true,"keep":[201],"empty":[179],"spans":167},{"name":"spv_unknown_bagwork_ibkr30NvAO4_seg1__85-375s","task_ids":[177,200],"assignees":["demird"],"exported":true,"keep":[200],"empty":[177],"spans":193},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg5__1644-1828s","task_ids":[174,199],"assignees":["demird","martinsiri"],"exported":true,"keep":[199],"empty":[174],"spans":95},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg4__1410-1597s","task_ids":[173,198],"assignees":["marcussiri","martinsiri"],"exported":true,"keep":[198],"empty":[173],"spans":50},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg3__1183-1363s","task_ids":[172,197],"assignees":["demird","marcussiri"],"exported":true,"keep":[197],"empty":[172],"spans":153},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg2__955-1136s","task_ids":[171,196],"assignees":["demird","martinsiri"],"exported":true,"keep":[196],"empty":[171],"spans":127},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg1__727-907s","task_ids":[170,195],"assignees":["marcussiri","martinsiri"],"exported":true,"keep":[195],"empty":[170],"spans":106},{"name":"spv_unknown_bagwork_24KEnA8nO4o_seg4__1555-1734s","task_ids":[168,194],"assignees":["demird"],"exported":true,"keep":[194],"empty":[168],"spans":117},{"name":"spv_unknown_bagwork_24KEnA8nO4o_seg3__1234-1406s","task_ids":[167,193],"assignees":["martinsiri"],"exported":true,"keep":[193],"empty":[167],"spans":129},{"name":"spv_unknown_bagwork_24KEnA8nO4o_seg2__894-1076s","task_ids":[166,192],"assignees":["marcussiri"],"exported":true,"keep":[192],"empty":[166],"spans":111},{"name":"spv_unknown_bagwork_24KEnA8nO4o_seg1__579-753s","task_ids":[165,191],"assignees":["demird"],"exported":true,"keep":[191],"empty":[165],"spans":74}],"n_complete":76,"cvat_available":true,"cvat_stale":false,"cvat_reason":null,"drive_configured":false,"drive_root":""},"quality":{"no_pose":[],"pose_unknown":[{"video_id":"spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19_seg1__0-211s","file":"264.xml","spans":268},{"video_id":"spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1_seg1__0-375s","file":"265.xml","spans":315}],"drive_configured":false,"unclosed":[],"unreviewed_kicks":[],"n_kick_clips":29,"span_short":262,"span_long":296,"short_frames":7,"long_frames":44,"outliers":[{"video_id":"spv_unknown_bagwork_laedbodhook_seg1__0-237s","file":"250.xml","frames":109,"start":4112,"strike":"lead_body_hook"},{"video_id":"spv_unknown_bagwork_switchkick2_seg1__0-297s","file":"220.xml","frames":106,"start":8362,"strike":"switch_kick"}],"chained":[{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg2__242-415s","file":"182.xml","n":181,"share":0.624},{"video_id":"spv_unknown_bagwork_970046b0-4c54-40b0-beed-ccb8c7277f19_seg1__0-211s","file":"264.xml","n":119,"share":0.444},{"video_id":"spv_unknown_bagwork_5ca7fc46-cde1-4cc5-a1ad-74f391b452d1_seg1__0-375s","file":"265.xml","n":116,"share":0.368},{"video_id":"spv_unknown_bagwork_MkHrv_B2oOQ_seg4__685-852s","file":"203.xml","n":105,"share":0.53},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg3__1234-1406s","file":"193.xml","n":84,"share":0.651},{"video_id":"spv_unknown_bagwork_ibkr30NvAO4_seg1__85-375s","file":"200.xml","n":47,"share":0.244},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg2__955-1136s","file":"196.xml","n":32,"share":0.252},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg4__1555-1734s","file":"194.xml","n":29,"share":0.248},{"video_id":"spv_unknown_bagwork_mTeCh3XSiEA_seg3__1183-1363s","file":"197.xml","n":26,"share":0.17},{"video_id":"spv_unknown_bagwork_24KEnA8nO4o_seg2__894-1076s","file":"192.xml","n":25,"share":0.225}],"n_chained":869,"duplicates":[],"export_stale":[],"unexported":[{"task_id":263,"name":"spv_unknown_bagwork_demirbodyjab_seg1__0-111s","assignee":"martinsiri","status":"annotation","idle_days":1.5,"age_days":8.6,"state":"in progress"},{"task_id":262,"name":"spv_unknown_bagwork_demirbodycross_seg1__0-82s","assignee":"demird","status":"annotation","idle_days":1.5,"age_days":8.6,"state":"in progress"},{"task_id":256,"name":"spv_unknown_bagwork_rearbodyhookde_seg1__0-232s","assignee":"martinsiri","status":"annotation","idle_days":1.5,"age_days":20.4,"state":"in progress"},{"task_id":228,"name":"spv_unknown_bagwork_leadbodyhook_seg1__0-297s","assignee":"demird","status":"annotation","idle_days":1.5,"age_days":25.5,"state":"in progress"},{"task_id":300,"name":"spv_unknown_bagwork__azD6pM9kcc_seg2__332-665s","assignee":"martinsiri","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":299,"name":"spv_unknown_bagwork__azD6pM9kcc_seg1__0-332s","assignee":"marcussiri","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":298,"name":"spv_unknown_bagwork_xAbPB8Ug3mU_seg2__350-701s","assignee":"demird","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":311,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg3__809-1213s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":310,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg2__404-809s","assignee":"marcussiri","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":309,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg1__0-404s","assignee":"demird","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":308,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg4__1404-1872s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":307,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg3__936-1404s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":306,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg2__468-936s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":305,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg1__0-468s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":304,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg4__1713-2284s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":303,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg3__1142-1713s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":302,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg2__571-1142s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":301,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg1__0-571s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":297,"name":"spv_unknown_bagwork_xAbPB8Ug3mU_seg1__0-350s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":296,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg4__1458-1945s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":295,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg3__972-1458s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":294,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg2__486-972s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":293,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg1__0-486s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":292,"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg2__437-874s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":291,"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg1__0-437s","assignee":"marcussiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":290,"name":"spv_unknown_bagwork_JzvLsNQvtp0_seg2__471-943s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.6,"state":"new"},{"task_id":289,"name":"spv_unknown_bagwork_JzvLsNQvtp0_seg1__0-471s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.6,"state":"new"},{"task_id":231,"name":"spv_unknown_bagwork_bodycross_seg1__0-297s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":25.5,"state":"new"}],"awaiting_export":[],"awaiting_label":[{"task_id":228,"name":"spv_unknown_bagwork_leadbodyhook_seg1__0-297s","assignee":"demird","status":"annotation","idle_days":1.5,"age_days":25.5,"state":"in progress"},{"task_id":256,"name":"spv_unknown_bagwork_rearbodyhookde_seg1__0-232s","assignee":"martinsiri","status":"annotation","idle_days":1.5,"age_days":20.4,"state":"in progress"},{"task_id":263,"name":"spv_unknown_bagwork_demirbodyjab_seg1__0-111s","assignee":"martinsiri","status":"annotation","idle_days":1.5,"age_days":8.6,"state":"in progress"},{"task_id":262,"name":"spv_unknown_bagwork_demirbodycross_seg1__0-82s","assignee":"demird","status":"annotation","idle_days":1.5,"age_days":8.6,"state":"in progress"},{"task_id":231,"name":"spv_unknown_bagwork_bodycross_seg1__0-297s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":25.5,"state":"new"},{"task_id":290,"name":"spv_unknown_bagwork_JzvLsNQvtp0_seg2__471-943s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.6,"state":"new"},{"task_id":289,"name":"spv_unknown_bagwork_JzvLsNQvtp0_seg1__0-471s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.6,"state":"new"},{"task_id":300,"name":"spv_unknown_bagwork__azD6pM9kcc_seg2__332-665s","assignee":"martinsiri","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":299,"name":"spv_unknown_bagwork__azD6pM9kcc_seg1__0-332s","assignee":"marcussiri","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":298,"name":"spv_unknown_bagwork_xAbPB8Ug3mU_seg2__350-701s","assignee":"demird","status":"annotation","idle_days":0.5,"age_days":0.5,"state":"new"},{"task_id":297,"name":"spv_unknown_bagwork_xAbPB8Ug3mU_seg1__0-350s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":296,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg4__1458-1945s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":295,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg3__972-1458s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":294,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg2__486-972s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":293,"name":"spv_unknown_bagwork_geO3X2eUxWE_seg1__0-486s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":292,"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg2__437-874s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":291,"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg1__0-437s","assignee":"marcussiri","status":"annotation","idle_days":0.0,"age_days":0.5,"state":"new"},{"task_id":308,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg4__1404-1872s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":307,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg3__936-1404s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":306,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg2__468-936s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":305,"name":"spv_unknown_bagwork_D5j55cOxD1I_seg1__0-468s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":304,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg4__1713-2284s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":303,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg3__1142-1713s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":302,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg2__571-1142s","assignee":"imranmdv","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":301,"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg1__0-571s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.4,"state":"new"},{"task_id":311,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg3__809-1213s","assignee":"martinsiri","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":310,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg2__404-809s","assignee":"marcussiri","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"},{"task_id":309,"name":"spv_unknown_bagwork_L5gGu_A2b-U_seg1__0-404s","assignee":"demird","status":"annotation","idle_days":0.0,"age_days":0.3,"state":"new"}],"duplicate_tasks":[{"name":"spv_unknown_bagwork_ibkr30NvAO4_seg1__486-799s","task_ids":[185,188,189,190,204],"assignees":["demird","marcussiri"],"exported":true,"keep":[204],"empty":[185,188,189,190],"spans":170},{"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg4__685-852s","task_ids":[184,203],"assignees":["demird","marcussiri"],"exported":true,"keep":[203],"empty":[184],"spans":198},{"name":"spv_unknown_bagwork_MkHrv_B2oOQ_seg3__430-635s","task_ids":[183,202],"assignees":["demird","martinsiri"],"exported":true,"keep":[202],"empty":[183],"spans":156},{"name":"spv_unknown_bagwork_ibkr30NvAO4_seg3__891-1177s","task_ids":[179,201],"assignees":["marcussiri","martinsiri"],"exported":true,"keep":[201],"empty":[179],"spans":167},{"name":"spv_unknown_bagwork_ibkr30NvAO4_seg1__85-375s","task_ids":[177,200],"assignees":["demird"],"exported":true,"keep":[200],"empty":[177],"spans":193},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg5__1644-1828s","task_ids":[174,199],"assignees":["demird","martinsiri"],"exported":true,"keep":[199],"empty":[174],"spans":95},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg4__1410-1597s","task_ids":[173,198],"assignees":["marcussiri","martinsiri"],"exported":true,"keep":[198],"empty":[173],"spans":50},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg3__1183-1363s","task_ids":[172,197],"assignees":["demird","marcussiri"],"exported":true,"keep":[197],"empty":[172],"spans":153},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg2__955-1136s","task_ids":[171,196],"assignees":["demird","martinsiri"],"exported":true,"keep":[196],"empty":[171],"spans":127},{"name":"spv_unknown_bagwork_mTeCh3XSiEA_seg1__727-907s","task_ids":[170,195],"assignees":["marcussiri","martinsiri"],"exported":true,"keep":[195],"empty":[170],"spans":106},{"name":"spv_unknown_bagwork_24KEnA8nO4o_seg4__1555-1734s","task_ids":[168,194],"assignees":["demird"],"exported":true,"keep":[194],"empty":[168],"spans":117},{"name":"spv_unknown_bagwork_24KEnA8nO4o_seg3__1234-1406s","task_ids":[167,193],"assignees":["martinsiri"],"exported":true,"keep":[193],"empty":[167],"spans":129},{"name":"spv_unknown_bagwork_24KEnA8nO4o_seg2__894-1076s","task_ids":[166,192],"assignees":["marcussiri"],"exported":true,"keep":[192],"empty":[166],"spans":111},{"name":"spv_unknown_bagwork_24KEnA8nO4o_seg1__579-753s","task_ids":[165,191],"assignees":["demird"],"exported":true,"keep":[191],"empty":[165],"spans":74}]},"velocity":{"bootstrapping":false,"n_snapshots":3,"window_days":1,"since":"2026-08-26","first_snapshot":"2026-08-26","people":[{"username":"marcussiri","display":"Marcus","spans":2866,"delta":0,"per_day":0.0,"weekly_pace":0},{"username":"demird","display":"Demir","spans":2170,"delta":0,"per_day":0.0,"weekly_pace":0},{"username":"martinsiri","display":"Martin","spans":2160,"delta":0,"per_day":0.0,"weekly_pace":0},{"username":"imranmdv","display":"Imran","spans":0,"delta":0,"per_day":0.0,"weekly_pace":0}],"total_per_day":0.0,"projections":[{"name":"lead_head_kick","spans":24,"target":200,"per_day":0.0,"eta":null,"remaining":176},{"name":"rear_head_kick","spans":53,"target":200,"per_day":0.0,"eta":null,"remaining":147},{"name":"lead_leg_kick","spans":59,"target":200,"per_day":0.0,"eta":null,"remaining":141},{"name":"outside_leg_kick","spans":2,"target":120,"per_day":0.0,"eta":null,"remaining":118},{"name":"roundhouse_body_kick","spans":3,"target":120,"per_day":0.0,"eta":null,"remaining":117},{"name":"body_teep","spans":15,"target":120,"per_day":0.0,"eta":null,"remaining":105},{"name":"question_mark_kick","spans":2,"target":80,"per_day":0.0,"eta":null,"remaining":78},{"name":"leg_teep","spans":3,"target":80,"per_day":0.0,"eta":null,"remaining":77},{"name":"spinning_back_kick","spans":3,"target":80,"per_day":0.0,"eta":null,"remaining":77},{"name":"spinning_backfist","spans":6,"target":80,"per_day":0.0,"eta":null,"remaining":74},{"name":"side_kick","spans":7,"target":80,"per_day":0.0,"eta":null,"remaining":73}],"series":[{"date":"2026-08-26","spans":7196,"clips":76},{"date":"2026-08-27","spans":7196,"clips":76},{"date":"2026-08-27","spans":7196,"clips":76}]},"changes":{"first_run":false,"since":"2026-08-26","celebrations":[],"alerts":["28 CVAT task(s) have never been exported \u2014 their labels are not in any training run."]}}</script>
+<script id="app-state" type="application/json">{"flags": {"rear_leg_kick": {"at": "2026-08-27"}}, "hidden": [], "v": 1, "work": {"dup:spv_unknown_bagwork_24KEnA8nO4o_seg1__579-753s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_24KEnA8nO4o_seg2__894-1076s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_24KEnA8nO4o_seg3__1234-1406s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_24KEnA8nO4o_seg4__1555-1734s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_MkHrv_B2oOQ_seg3__430-635s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_MkHrv_B2oOQ_seg4__685-852s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_ibkr30NvAO4_seg1__486-799s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_ibkr30NvAO4_seg1__85-375s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_ibkr30NvAO4_seg3__891-1177s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_mTeCh3XSiEA_seg1__727-907s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_mTeCh3XSiEA_seg2__955-1136s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_mTeCh3XSiEA_seg3__1183-1363s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_mTeCh3XSiEA_seg4__1410-1597s": {"assignee": "imranmdv", "status": "todo"}, "dup:spv_unknown_bagwork_mTeCh3XSiEA_seg5__1644-1828s": {"assignee": "imranmdv", "status": "todo"}, "task:228": {"assignee": "demird", "due": "2026-09-03", "status": "todo"}, "task:231": {"assignee": "imranmdv", "due": "2026-09-17", "status": "todo"}, "task:256": {"assignee": "martinsiri", "due": "2026-09-03", "status": "todo"}, "task:262": {"assignee": "demird", "due": "2026-09-03", "status": "todo"}, "task:263": {"assignee": "martinsiri", "due": "2026-09-03", "status": "todo"}, "task:289": {"assignee": "imranmdv", "due": "2026-09-10", "status": "todo"}, "task:290": {"assignee": "martinsiri", "due": "2026-09-10", "status": "todo"}, "task:291": {"assignee": "marcussiri", "due": "2026-09-03", "status": "todo"}, "task:292": {"assignee": "imranmdv", "due": "2026-09-17", "status": "todo"}, "task:293": {"assignee": "imranmdv", "due": "2026-09-10", "status": "todo"}, "task:294": {"assignee": "imranmdv", "due": "2026-09-03", "status": "todo"}, "task:295": {"assignee": "martinsiri", "due": "2026-09-10", "status": "todo"}, "task:296": {"assignee": "martinsiri", "due": "2026-09-10", "status": "todo"}, "task:297": {"assignee": "imranmdv", "due": "2026-09-17", "status": "todo"}, "task:298": {"assignee": "demird", "due": "2026-09-17", "status": "todo"}, "task:299": {"assignee": "marcussiri", "due": "2026-09-17", "status": "todo"}, "task:300": {"assignee": "martinsiri", "due": "2026-09-17", "status": "todo"}, "task:301": {"assignee": "martinsiri", "due": "2026-09-03", "status": "todo"}, "task:302": {"assignee": "imranmdv", "due": "2026-09-03", "status": "todo"}, "task:303": {"assignee": "imranmdv", "due": "2026-09-03", "status": "todo"}, "task:304": {"assignee": "martinsiri", "due": "2026-09-03", "status": "todo"}, "task:305": {"assignee": "martinsiri", "due": "2026-09-17", "status": "todo"}, "task:306": {"assignee": "imranmdv", "due": "2026-09-10", "status": "todo"}, "task:307": {"assignee": "martinsiri", "due": "2026-09-17", "status": "todo"}, "task:308": {"assignee": "imranmdv", "due": "2026-09-17", "status": "todo"}, "task:309": {"assignee": "demird", "due": "2026-09-10", "status": "todo"}, "task:310": {"assignee": "marcussiri", "due": "2026-09-10", "status": "todo"}, "task:311": {"assignee": "martinsiri", "due": "2026-09-17", "status": "todo"}}}</script>
+<script>window.SV_OFFLINE=1</script>
+<script id="app-js">
+"use strict";
+/* Sekuence Label Desk — the page renders itself from two blobs:
+ *
+ *   DATA   the measurements, regenerated by build.py on every refresh
+ *   STATE  what people have decided — assignments, deadlines, status, problem flags
+ *
+ * STATE is SHARED. When someone edits the board the page republishes itself through the artifact
+ * capability, so every open view reloads to the same board. That is the whole reason this page is
+ * rendered in JS rather than served as finished HTML: a page that can rewrite itself has to be able
+ * to regenerate its own source, and it cannot do that from a DOM that viewers have been clicking on.
+ */
+const DATA = JSON.parse(document.getElementById("app-data").textContent);
+let STATE = JSON.parse(document.getElementById("app-state").textContent);
+if (!STATE || typeof STATE !== "object") STATE = {};
+STATE.work = STATE.work || {};
+STATE.flags = STATE.flags || {};
+STATE.hidden = STATE.hidden || [];
+
+const $ = (s, r) => (r || document).querySelector(s);
+const esc = s => String(s === null || s === undefined ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const num = n => (n === null || n === undefined) ? "—" : n.toLocaleString();
+const pct = x => x === null || x === undefined ? "—" : Math.round(100 * x) + "%";
+const STATUSES = [["todo", "To do"], ["doing", "In progress"], ["blocked", "Blocked"], ["done", "Done"]];
+
+/* ══ work items ═══════════════════════════════════════════════════════════
+   Items are DERIVED from the measurements every build, and STATE only carries the human overlay
+   (who, when, how far along). That way a refresh brings in new problems and retires solved ones
+   without ever losing an assignment. */
+function workItems() {
+  /* CLIPS TO LABEL. One row per video, each with an id, an owner and a date. Filming jobs are a
+     different kind of work with no video id yet, so they live on Footage — see recordingItems(). */
+  const out = [];
+  const add = (id, o) => out.push(Object.assign({
+    id, priority: 3, ids: [], why: "", kind: "labelling", assignee: "",
+  }, o, STATE.work[id] || {}));
+
+  /* Clips sitting in CVAT waiting to be labelled. Every row already carries the CVAT assignee, so
+     this is the "what am I labelling today" list — the reason most people open this page. */
+  (DATA.pipeline.awaiting_label || []).forEach(t => {
+    add("task:" + t.task_id, {
+      title: t.name, task: t.task_id, kind: "labelling",
+      priority: t.state === "in progress" ? 2 : 3,
+      what: "Label",
+      why: t.state === "in progress"
+        ? "Started in CVAT and not finished. Pick it back up where you left off."
+        : "Waiting in CVAT, not started yet.",
+      ids: [t.state].concat(t.age_days >= 1 ? [Math.round(t.age_days) + "d old"] : []),
+      assignee: (STATE.work["task:" + t.task_id] || {}).assignee || t.assignee || "",
+    });
+  });
+
+  /* Finished in CVAT but never exported — real stranded work, distinct from the queue above. */
+  (DATA.pipeline.awaiting_export || []).forEach(t => {
+    add("export:" + t.task_id, {
+      title: t.name, task: t.task_id, kind: "labelling", what: "Export", priority: 1,
+      why: "Marked finished in CVAT but there is no file on disk, so none of this labelling has "
+         + "reached a training run yet.",
+      ids: [Math.round(t.idle_days) + "d since last touched"],
+      assignee: (STATE.work["export:" + t.task_id] || {}).assignee || t.assignee || "",
+    });
+  });
+
+  (DATA.quality.no_pose || []).forEach(r => {
+    add("pose:" + r.video_id, {
+      title: r.video_id, kind: "labelling", what: "Pose", priority: 1,
+      why: r.spans + " labelled strikes that training will silently skip — there is no pose file "
+         + "for this clip, so the ingest drops it.",
+      ids: [r.file, r.spans + " strikes"],
+    });
+  });
+
+  (DATA.quality.duplicate_tasks || []).forEach(t => {
+    const keep = (t.keep || [])[0];
+    const empty = t.empty || [];
+    add("dup:" + t.name, {
+      title: t.name, task: (t.keep || [])[0], kind: "labelling", destructive: true,
+      what: keep && empty.length ? "Delete copies" : "Resolve duplicates",
+      priority: 3,
+      why: keep && empty.length
+        ? "Uploaded " + t.task_ids.length + " times. Task " + keep + " holds all "
+          + t.spans + " labelled strikes; the other " + empty.length
+          + " are empty and never exported, so deleting them loses nothing."
+        : "Uploaded " + t.task_ids.length + " times and more than one copy has labels — these need "
+          + "looking at by hand before anything is deleted.",
+      ids: (keep ? ["keep " + keep] : []).concat(empty.length ? ["delete " + empty.join(", ")] : []),
+    });
+  });
+
+  (DATA.quality.unreviewed_kicks || []).forEach(r => {
+    add("kick:" + r.video_id, {
+      title: r.video_id, kind: "labelling", what: "Kick review", priority: 3,
+      why: "Kicks in this clip have not been through the lead/rear review yet.",
+      ids: [r.file, r.spans + " strikes"],
+    });
+  });
+
+  return out.filter(o => STATE.hidden.indexOf(o.id) < 0);
+}
+
+/* Filming and footage-research jobs. Same card and the same shared assignments — they simply belong
+   next to the coverage gaps that motivate them rather than in a list of clips. */
+function recordingItems() {
+  const out = [];
+  DATA.queue.forEach((q, i) => {
+    if (q.action.indexOf("film") < 0) return;     // re-splits are nobody's to pick up
+    const id = "rec:" + q.name;
+    out.push(Object.assign({
+      id, title: q.name, kind: "recording", what: q.action_label,
+      why: q.reason, summary: q.summary || "", assignee: "", status: "todo", due: "",
+      priority: i < 2 ? 1 : (i < 5 ? 2 : 3),
+      ids: (q.spans !== null ? [q.spans + " examples"] : [])
+        .concat(q.units ? [q.units + " sessions"] : []),
+    }, STATE.work[id] || {}));
+  });
+  return out.filter(o => STATE.hidden.indexOf(o.id) < 0);
+}
+
+/* Strikes the team has flagged by hand. These head the Priorities tab rather than the board: the
+   answer to "film more lead_head_kick" is a gym session, not a clip with a deadline. */
+function flaggedStrikes() {
+  return Object.keys(STATE.flags).map(name => ({
+    name, note: (STATE.flags[name] || {}).note || "",
+    cls: DATA.classes.find(c => c.name === name) || null,
+  }));
+}
+
+function dueClass(due, status) {
+  if (!due || status === "done") return "ok";
+  const days = Math.round((new Date(due + "T00:00:00") - new Date(DATA.date + "T00:00:00")) / 86400000);
+  if (days < 0) return "over";
+  if (days <= 2) return "soon";
+  return "ok";
+}
+function dueLabel(due, status) {
+  if (!due) return "";
+  const days = Math.round((new Date(due + "T00:00:00") - new Date(DATA.date + "T00:00:00")) / 86400000);
+  if (status === "done") return "done";
+  if (days < 0) return Math.abs(days) + "d overdue";
+  if (days === 0) return "due today";
+  if (days === 1) return "due tomorrow";
+  return "due in " + days + "d";
+}
+
+/* ══ persistence ══════════════════════════════════════════════════════════
+   The page republishes ITSELF. `publish` needs a complete document, and it must not be the live DOM
+   (which carries viewer session state), so the replacement is rebuilt from the three static blocks
+   this page was served with — stylesheet, data, and this script — plus the new state. */
+let artifactCap = null, capChecked = false;
+// Opened as a plain file there is no viewer and no capability to ask, so saving is impossible.
+const OFFLINE = typeof window !== "undefined" && !!window.SV_OFFLINE;
+let readOnly = OFFLINE;
+let saveTimer = null, pending = false;
+
+function buildDoc(state) {
+  const css = document.getElementById("app-css").textContent;
+  const js = document.getElementById("app-js").textContent;
+  const data = document.getElementById("app-data").textContent;
+  const j = s => s.replace(/<\//g, "<\\/");
+  return '<!doctype html><html><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+    + "<title>Sekuence Label Desk</title>"
+    + '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    + '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+    + '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700'
+    + "&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap\">"
+    + '<style id="app-css">' + css + "</style></head><body>"
+    + '<div id="root"></div>'
+    + '<script id="app-data" type="application/json">' + j(data) + "<\/script>"
+    + '<script id="app-state" type="application/json">' + j(JSON.stringify(state)) + "<\/script>"
+    + '<script id="app-js">' + js + "<\/script></body></html>";
+}
+
+function toast(msg, ms) {
+  let el = $(".saving");
+  if (!el) { el = document.createElement("div"); el.className = "saving"; document.body.appendChild(el); }
+  el.textContent = msg;
+  clearTimeout(el._t);
+  if (ms) el._t = setTimeout(() => el.remove(), ms);
+}
+
+async function cap() {
+  if (OFFLINE) return null;
+  if (capChecked) return artifactCap;
+  capChecked = true;
+  try { artifactCap = window.claude && window.claude.use ? await window.claude.use("artifact") : null; }
+  catch (e) { artifactCap = null; }
+  return artifactCap;
+}
+
+/* Edits are batched: several clicks in a row become one published version. Publishing reloads every
+   open view, so it is the last act of an interaction, never a per-keystroke write. */
+function save() {
+  pending = true;
+  toast("Saving…");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    const a = await cap();
+    if (!a) { readOnly = true; toast("Not saved — this view is read-only.", 4000); render(); return; }
+    try {
+      await a.publish(buildDoc(STATE));
+      pending = false;
+    } catch (e) {
+      const code = e && e.code;
+      if (code === "conflict") { toast("Someone else saved first — reloading.", 4000); return; }
+      if (code === "not_writer" || code === "not_granted" || code === "consent_required"
+          || code === "not_declared" || code === "capability_disabled") {
+        readOnly = true; toast("This view is read-only — your change was not saved.", 5000); render();
+        return;
+      }
+      if (code === "rate_limited") { toast("Saving too fast — try again in a moment.", 4000); return; }
+      toast("Could not save (" + (code || "error") + ").", 5000);
+    }
+  }, 900);
+}
+
+function setWork(id, patch) {
+  STATE.work[id] = Object.assign({}, STATE.work[id] || {}, patch);
+  save();
+  render();
+}
+function toggleFlag(name) {
+  if (STATE.flags[name]) delete STATE.flags[name];
+  else STATE.flags[name] = { at: DATA.date };
+  save();
+  render();
+}
+
+/* ══ home ═════════════════════════════════════════════════════════════════
+   The whole project on one screen: are we hitting the week, what is on the board, what to do next,
+   what is most at risk. Home also absorbed the old Priorities and People tabs — the ranked list is
+   one line per item now, so it fits, and a separate tab for it was a click nobody needed. */
+function viewHome() {
+  const items = workItems();
+  const open = items.filter(i => (i.status || "todo") !== "done");
+  const overdue = open.filter(i => i.due && dueClass(i.due, i.status) === "over");
+  const unassigned = open.filter(i => !i.assignee);
+  const goal = DATA.people.rows.filter(p => p.weekly_target > 0);
+  const done = goal.reduce((a, p) => a + p.since, 0);
+  const starving = DATA.classes.filter(r => r.starves);
+  const flagged = flaggedStrikes();
+  const rec = recordingItems().filter(i => (i.status || "todo") !== "done");
+  const c = DATA.coverage;
+  const gaps = [["Camera angle", c.camera.square_on, c.camera.target],
+                ["Southpaw", c.stance.southpaw, c.stance.target],
+                ["Idle footage", c.idle.clips, c.idle.target]].filter(g => g[1] < g[2]);
+
+  return `
+  <div class="panel">
+    <h2>Strikes labelled</h2>
+    <div class="herobig">${num(done)}<span class="of"> since ${esc(DATA.people.counting_since)}</span></div>
+    <div class="grid" style="margin-top:16px">
+      ${goal.map(p => {
+        const mine = open.filter(i => i.assignee === p.username).length;
+        return `<div class="tile">
+          <h3>${esc(p.display)}</h3>
+          <div class="big">${num(p.since)}<span class="of"> strikes</span></div>
+          <p>${mine ? mine + " clip" + (mine === 1 ? "" : "s") + " assigned" : "Nothing assigned"}</p>
+        </div>`; }).join("")}
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <h2>Jobs</h2>
+    <div class="strip" style="padding:0 0 10px">
+      <div class="stat"><b>${open.length}</b><small>clips to label</small></div>
+      <div class="stat"><b>${rec.length}</b><small>to record</small></div>
+      <div class="stat ${overdue.length ? "alarm" : ""}"><b>${overdue.length}</b><small>overdue</small></div>
+      <div class="stat ${unassigned.length ? "alarm" : ""}"><b>${unassigned.length}</b><small>unassigned</small></div>
+    </div>
+    ${overdue.length ? `<ul class="plain">${overdue.slice(0, 4).map(i =>
+      `<li><strong>${esc(dueLabel(i.due, i.status))}</strong> — ${esc(i.title)} · ${esc(i.assignee ? displayName(i.assignee) : "nobody")}</li>`).join("")}</ul>` : ""}
+    <p class="sub" style="margin-top:10px"><a href="#work" data-goto="work">Clips →</a>
+      &nbsp;·&nbsp; <a href="#footage" data-goto="footage">Recording →</a></p>
+  </div>
+
+  ${flagged.length ? `<div class="panel">
+    <h2>Flagged by the team</h2>
+    <ul class="plain">${flagged.map(f => `<li><strong>${esc(f.name)}</strong>
+      <span class="dim">— ${esc(f.note || (f.cls ? f.cls.spans + " examples, " + f.cls.units + " sessions" : "flagged"))}</span>
+      <button class="chip flat" data-flag="${esc(f.name)}" style="cursor:pointer;border:0;margin-left:6px">remove</button></li>`).join("")}</ul>
+  </div>` : ""}
+
+  <div class="panel">
+    <h2>Do these next</h2>
+    <ol class="plain">${DATA.queue.map(q =>
+      `<li><span class="chip ${q.action.indexOf("film") >= 0 ? "film" : (q.action === "resplit" ? "resplit" : "label")}">${esc(q.action_label)}</span>
+        <strong>${esc(q.name)}</strong>
+        <span class="dim">— ${esc(q.summary || q.reason.split(";")[0])}</span></li>`).join("")}</ol>
+  </div>
+
+  <div class="panel">
+    <h2>Biggest risks</h2>
+    <div class="grid">
+      <div class="tile"><h3>Strikes at risk</h3>
+        <div class="big">${starving.length}</div>
+        <p>${starving.length ? esc(starving.slice(0, 3).map(r => r.name).join(", "))
+            + (starving.length > 3 ? " +" + (starving.length - 3) : "") : "None."}
+          <a href="#strikes" data-goto="strikes">Strikes →</a></p></div>
+      ${gaps.map(([label, have, want]) => `<div class="tile"><h3>${esc(label)}</h3>
+        <div class="big">${have}<span class="of"> / ${want}</span></div>
+        <p>Only filming moves this. <a href="#footage" data-goto="footage">Footage →</a></p></div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function displayName(u) {
+  const p = DATA.people.rows.find(r => r.username === u);
+  return p ? p.display : u;
+}
+
+/* ══ tabs ═════════════════════════════════════════════════════════════════ */
+const TABS = [
+  ["home", "Home"], ["work", "Work"], ["strikes", "Strikes"],
+  ["model", "Model"], ["footage", "Footage"],
+];
+let tab = "home";
+let filters = { cls: "", problems: false, board: "open", who: "", kind: "" };
+
+function setTab(t) {
+  tab = t;
+  try { localStorage.setItem("sv-tab", t); history.replaceState(null, "", "#" + t); } catch (e) {}
+  render();
+}
+
+/* ══ views ═══════════════════════════════════════════════════════════════
+   Five tabs, each with one job. The Model tab is the model for all of them: a VERDICT per row, not a
+   table to interpret. Wherever a table survives it is because the numbers are the point — and even
+   then every row ends in a plain-language state chip. */
+function viewWork() {
+  const items = workItems();
+  const open = items.filter(i => (i.status || "todo") !== "done");
+  const mine = filters.who ? items.filter(i => i.assignee === filters.who) : items;
+  let shown = filters.board === "open" ? mine.filter(i => (i.status || "todo") !== "done")
+            : filters.board === "done" ? mine.filter(i => i.status === "done")
+            : mine;
+  shown = shown.slice().sort((a, b) => {
+    const ad = a.due || "9999", bd = b.due || "9999";
+    return (a.priority - b.priority) || ad.localeCompare(bd) || a.title.localeCompare(b.title);
+  });
+  const overdue = open.filter(i => i.due && dueClass(i.due, i.status) === "over").length;
+  const unassigned = open.filter(i => !i.assignee).length;
+  const people = DATA.people.rows;
+
+  return `
+  <div class="panel">
+    <h2>Clips to label</h2>
+    <p class="sub">Shared — set an owner and everyone sees it.
+      Filming jobs are on <a href="#footage" data-goto="footage">Footage</a>.</p>
+    ${readOnly ? '<div class="readonly-banner">' + (OFFLINE
+      ? "Offline copy from " + esc(DATA.generated_at.slice(0, 10)) + ". Everything is here to read, "
+        + "but ticking things off will not save — ask Imran to update the board."
+      : "Read-only view — changes will not save.") + '</div>' : ""}
+    <div class="strip" style="padding:0 0 14px">
+      <div class="stat"><b>${open.length}</b><small>open</small></div>
+      <div class="stat ${overdue ? "alarm" : ""}"><b>${overdue}</b><small>overdue</small></div>
+      <div class="stat ${unassigned ? "alarm" : ""}"><b>${unassigned}</b><small>unassigned</small></div>
+      <div class="stat"><b>${items.length - open.length}</b><small>done</small></div>
+    </div>
+    <div class="board-toolbar">
+      <div class="seg">
+        ${[["open", "Open"], ["all", "All"], ["done", "Done"]].map(([k, l]) =>
+          `<button data-board="${k}" aria-pressed="${filters.board === k}">${l}</button>`).join("")}
+      </div>
+      <select id="who-filter" class="pick">
+        <option value="">Everyone</option>
+        ${people.map(p => `<option value="${esc(p.username)}" ${filters.who === p.username ? "selected" : ""}>${esc(p.display)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="work">
+      ${shown.length ? shown.map(i => itemCard(i, people)).join("")
+        : '<p class="sub">Nothing here.</p>'}
+    </div>
+  </div>`;
+}
+
+function itemCard(i, people) {
+  const status = i.status || "todo";
+  const KIND = { recording: "Record", labelling: "Label" };
+  return `
+  <div class="item ${i.destructive ? "danger" : ""} ${status === "done" ? "done" : ""}">
+    <div class="sev"></div>
+    <div class="body">
+      <div class="title">
+        <span class="dot ${status}"></span>
+        ${i.task ? `<span class="taskid" title="CVAT task">#${esc(i.task)}</span>` : ""}
+        <b>${esc(i.title)}</b>
+        <span class="chip ${i.destructive ? "film" : "label"}">${esc(i.what || KIND[i.kind] || "Task")}</span>
+        ${i.due ? `<span class="due ${dueClass(i.due, status)}">${esc(dueLabel(i.due, status))}</span>` : ""}
+      </div>
+      <div class="why">${esc(i.summary || i.why)}</div>
+      ${i.ids.length ? `<div class="ids">${i.ids.map(x => `<code>${esc(x)}</code>`).join("")}</div>` : ""}
+    </div>
+    <div class="ctl">
+      <label>Owner</label>
+      <select data-item="${esc(i.id)}" data-field="assignee" ${readOnly ? "disabled" : ""}>
+        <option value="">Nobody</option>
+        ${people.map(p => `<option value="${esc(p.username)}" ${i.assignee === p.username ? "selected" : ""}>${esc(p.display)}</option>`).join("")}
+      </select>
+      <label>Due</label>
+      <input type="date" data-item="${esc(i.id)}" data-field="due" value="${esc(i.due || "")}" ${readOnly ? "disabled" : ""}>
+      <label>Status</label>
+      <select data-item="${esc(i.id)}" data-field="status" ${readOnly ? "disabled" : ""}>
+        ${STATUSES.map(([k, l]) => `<option value="${k}" ${status === k ? "selected" : ""}>${l}</option>`).join("")}
+      </select>
+    </div>
+  </div>`;
+}
+
+/* Strikes = the old Classes and Split-health tabs. They were always the same subject seen twice:
+   how much of a strike exists, and whether enough of it survives the practice/test split. One row
+   per strike, ending in a verdict. */
+function viewStrikes() {
+  const q = filters.cls.toLowerCase();
+  const roster = DATA.split["BAG_VAL_SUBJECTS"] || DATA.split[Object.keys(DATA.split)[0]];
+  const split = {};
+  (roster.classes || []).forEach(c => { split[c.name] = c; });
+  const rows = DATA.classes
+    .filter(r => !q || r.name.indexOf(q) >= 0)
+    .filter(r => !filters.problems || r.starves || r.below_learnable || STATE.flags[r.name]);
+  const cut = new Set(DATA.exclude_classes || []);
+  const verdict = r => {
+    if (cut.has(r.name)) return ["flat", "Not in MVP"];
+    if (r.below_learnable) return ["film", "Too few"];
+    if (r.starves) return ["film", "At risk"];
+    const c = split[r.name];
+    if (c && c.no_val && c.total >= 100) return ["resplit", "Never tested"];
+    return ["ok", "Healthy"];
+  };
+  return `
+  <div class="panel">
+    <h2>Strikes</h2>
+    <p class="sub">Bar = examples per filming session, biggest highlighted. ⚑ to flag.</p>
+    <div class="toolbar">
+      <input type="search" id="class-filter" placeholder="Filter…" value="${esc(filters.cls)}" aria-label="Filter strikes">
+      <label><input type="checkbox" id="class-problems" ${filters.problems ? "checked" : ""}> Problems only</label>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th style="width:26px"></th><th>Strike</th><th class="num">Examples</th>
+        <th>Across sessions</th><th class="num">Effective</th>
+        <th class="num">Practice</th><th class="num">Test</th><th>State</th></tr></thead>
+      <tbody>${rows.map(r => {
+        const [cls, label] = verdict(r);
+        const c = split[r.name] || {};
+        const tot = r.spans || 1;
+        return `<tr class="${cls !== "ok" ? "bad" : ""}">
+          <td><button class="flagbtn" data-flag="${esc(r.name)}" aria-pressed="${!!STATE.flags[r.name]}"
+              title="Flag">⚑</button></td>
+          <td class="name">${esc(r.name)}</td>
+          <td class="num">${r.spans}</td>
+          <td><div class="bar" style="min-width:120px">${r.units_top.map(([u, n], i) =>
+            `<i class="${i === 0 ? "lead" : ""}" style="width:${(100 * n / tot).toFixed(1)}%" title="${esc(u)}: ${n}"></i>`).join("")}</div></td>
+          <td class="num">${r.eff_units}</td>
+          <td class="num dim">${c.train === undefined ? "—" : c.train}</td>
+          <td class="num dim">${c.val === undefined ? "—" : c.val}</td>
+          <td><span class="chip ${cls}">${label}</span></td>
+        </tr>`; }).join("")}</tbody></table></div>
+    <p class="note"><strong>Effective</strong> = sessions it behaves like, not sessions counted.
+      <strong>At risk</strong> = hold back its biggest session for testing and too little is left to
+      learn from. Split shown for the next training run.</p>
+  </div>
+  <div class="panel">
+    <h2>Lead and rear pairs</h2>
+    <p class="sub">One-sided data teaches "low kick = rear".</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Pair</th><th class="num">Lead</th><th class="num">Rear</th><th class="num">Ratio</th><th>State</th></tr></thead>
+      <tbody>${DATA.sided.map(s => `<tr class="${s.one_sided ? "bad" : ""}">
+        <td class="name">${esc(s.lead)} / ${esc(s.rear)}</td>
+        <td class="num">${s.lead_spans}</td><td class="num">${s.rear_spans}</td>
+        <td class="num">${s.ratio}×</td>
+        <td>${s.one_sided ? `<span class="chip film">Needs ${esc(s.weak_side.split("_")[0])}</span>`
+                          : '<span class="chip ok">Balanced</span>'}</td></tr>`).join("")}</tbody></table></div>
+  </div>`;
+}
+
+function plainDiagnosis(c) {
+  if (c.action === "re-split") return {
+    head: `${c.gt} gets called “${c.pred}”`,
+    plain: `Spotted ${pct(c.recall)} of the time — found, just named wrong. Almost every ${c.pred} `
+      + `example sits on the practice side, so it is never tested on them. Bookkeeping, not footage.`,
+    todo: "Nothing to film or label — Imran re-splits the data.",
+    nobody: true,
+  };
+  if (c.action === "film") return {
+    head: `${c.gt} confused with ${c.pred}`,
+    plain: `Only ${num(c.train)} examples to learn from, so it falls back on the strike it has seen more of.`,
+    todo: `Film and label more ${c.gt}.`,
+    nobody: false,
+  };
+  return {
+    head: `${c.gt} and ${c.pred} look alike`,
+    plain: `${num(c.train)} examples, so not a shortage — these two are genuinely hard to tell apart `
+      + `from this angle.`,
+    todo: "Spot-check a few labels.",
+    nobody: false,
+  };
+}
+
+function viewModel() {
+  const e = DATA.errors;
+  if (!e.available) return `<div class="panel"><h2>Model</h2><p class="sub">${esc(e.note)}</p></div>`;
+  const h = e.headline || {};
+  return `
+  <div class="panel">
+    <h2>How the model is doing</h2>
+    <p class="sub">On clips it never trained on.</p>
+    <div class="grid">
+      <div class="tile"><h3>Strikes it found</h3><div class="big">${pct(h.recall)}</div>
+        <p>Of strikes thrown, how many it spotted.</p></div>
+      <div class="tile"><h3>Calls that were real</h3><div class="big">${pct(h.precision)}</div>
+        <p>When it calls a strike, how often one was there.</p></div>
+      <div class="tile"><h3>Named exactly right</h3><div class="big">${pct(h.joined_acc)}</div>
+        <p>Of those found, how many named right.</p></div>
+      <div class="tile"><h3>Tested on</h3><div class="big">${e.n_clips}<span class="of"> clips</span></div>
+        <p>Out of ${DATA.totals.clips}.</p></div>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>What it gets wrong</h2>
+    ${e.confusions.map(c => {
+      const d = plainDiagnosis(c);
+      return `<div class="diag">
+        <h4>${esc(d.head)}</h4>
+        <div class="plain">${esc(d.plain)}</div>
+        <div class="todo ${d.nobody ? "nobody" : ""}">${d.nobody ? "→ " : "✔ "}${esc(d.todo)}</div>
+        <div class="nums">${c.n}× · ${num(c.train)} practice · ${num(c.val)} test</div>
+      </div>`; }).join("")}
+    ${(e.no_val_support || []).length ? `<p class="note crit"><strong>Never tested:</strong>
+      ${e.no_val_support.map(n => `<code>${esc(n)}</code>`).join(" · ")} — all examples went to
+      practice, none kept for testing. A splitting fix, not a filming one.</p>` : ""}
+  </div>`;
+}
+
+/* Footage = the old Pipeline, Coverage and Quality tabs. All three answer "what footage do we have,
+   what is wrong with it, and what is missing" — and the per-clip camera table that used to live here
+   was 75 rows nobody could act on, so it is a distribution now. */
+function viewFootage() {
+  const p = DATA.pipeline, c = DATA.coverage, q = DATA.quality;
+  const rec = recordingItems();
+  const recOpen = rec.filter(i => (i.status || "todo") !== "done");
+  const people = DATA.people.rows;
+  const hk = c.head_kick || {};
+  const gaps = [["Camera facing the athlete", c.camera.square_on, c.camera.target,
+                 `All ${c.camera.measured} clips are side-on — a hook and a straight look the same from there.`],
+                ["Head kicks", hk.spans || 0, hk.target || 0,
+                 `${hk.rear || 0} rear to ${hk.lead || 0} lead. The thinnest strike family, and the hardest to film.`],
+                ["Southpaw stance", c.stance.southpaw, c.stance.target,
+                 `${c.stance.orthodox} orthodox vs ${c.stance.southpaw} southpaw. Always guessing "orthodox" would score the same.`],
+                ["Footage with no strikes", c.idle.clips, c.idle.target,
+                 "Warmups with nothing thrown. The only way to catch invented strikes."]];
+  const checks = [
+    ["Missing pose files", q.no_pose.length, q.no_pose.length
+      ? q.no_pose.map(r => r.file).join(", ") : "None."],
+    ["Unfinished strikes", q.unclosed.length, q.unclosed.length
+      ? q.unclosed.map(u => u.file).join(", ") : "None."],
+    ["Uploaded to CVAT twice", (q.duplicate_tasks || []).length, (q.duplicate_tasks || []).length
+      ? "Labels split across copies — on the work board to merge." : "None."],
+  ];
+  return `
+  <div class="panel">
+    <h2>To record</h2>
+    <p class="sub">${recOpen.length} open. Give each an owner and a date like any other job.</p>
+    ${readOnly ? '<div class="readonly-banner">' + (OFFLINE
+      ? "Offline copy from " + esc(DATA.generated_at.slice(0, 10)) + ". Everything is here to read, "
+        + "but ticking things off will not save — ask Imran to update the board."
+      : "Read-only view — changes will not save.") + '</div>' : ""}
+    <div class="work">${rec.map(i => itemCard(i, people)).join("")}</div>
+  </div>
+  <div class="panel">
+    <h2>What is missing</h2>
+    <p class="sub">Only filming moves these.</p>
+    <div class="grid">
+      ${gaps.map(([label, have, want, why]) => `<div class="tile">
+        <h3>${esc(label)}</h3>
+        <div class="big ${have < want ? "" : ""}">${have}<span class="of"> / ${want}</span></div>
+        <p>${esc(why)}</p></div>`).join("")}
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Where every clip is</h2>
+    <p class="sub">Unchecked steps say <em>unknown</em>, never guessed.</p>
+    ${!p.cvat_available ? `<p class="note crit">CVAT unreachable — task columns unknown.</p>` : ""}
+    ${!p.drive_configured ? '<p class="note warn">Drive not connected — “downloaded” cannot be checked.</p>' : ""}
+    <div class="kan" style="margin-top:12px">
+      ${p.stages.map(st => `<div class="col"><h3>${esc(p.stage_labels[st])}</h3>
+        <div class="big">${p.stage_counts[st]}<span class="of" style="font-size:14px;color:var(--muted)"> / ${p.n_clips}</span></div>
+        ${p.stage_unknown[st] ? `<div class="unk">${p.stage_unknown[st]} unknown</div>` : ""}</div>`).join("")}
+    </div>
+    ${p.stuck.length ? `<p class="note warn">${p.stuck.length} clip(s) untouched for
+      ${p.stuck_days}+ days: ${p.stuck.slice(0, 5).map(r => `<code>${esc(r.file)}</code>`).join(" ")}</p>` : ""}
+  </div>
+  <div class="panel">
+    <h2>Checks</h2>
+    <div class="grid">
+      ${checks.map(([label, n, detail]) => `<div class="tile">
+        <h3>${esc(label)}</h3><div class="big">${n}</div><p>${esc(detail)}</p></div>`).join("")}
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Combinations</h2>
+    <p class="sub">Strikes thrown back to back. Mixed footage is scarce and valuable.
+      Overall <strong>${(100 * DATA.combos.overall).toFixed(1)}%</strong>. Most mixed clips:</p>
+    <div class="tablewrap"><table><thead><tr><th>Clip</th><th class="num">Strikes</th>
+      <th class="num">Types</th><th>Density</th></tr></thead>
+    <tbody>${DATA.combos.per_clip.slice(0, 10).map(r => `<tr><td class="name">${esc(r.file)} <span class="dim">${esc(r.video_id)}</span></td>
+      <td class="num">${r.spans}</td><td class="num dim">${r.classes}</td>
+      <td><div class="meter" style="max-width:160px"><i style="width:${(100 * r.share).toFixed(1)}%"></i></div></td></tr>`).join("")}</tbody></table></div>
+  </div>
+`;
+}
+
+/* ══ render ═══════════════════════════════════════════════════════════════ */
+const VIEWS = { home: viewHome, work: viewWork, strikes: viewStrikes,
+                model: viewModel, footage: viewFootage };
+
+function render() {
+  const items = workItems();
+  const openN = items.filter(i => (i.status || "todo") !== "done").length;
+  const starving = DATA.classes.filter(r => r.starves).length;
+  const counts = { work: openN, strikes: DATA.classes.length };
+
+  $("#root").innerHTML = `
+  <header><div class="wrap">
+    <div class="masthead">
+      <div class="mark">Seku<span>ence</span> Label Desk</div>
+      <div class="stamp">data from ${esc(DATA.generated_at)}</div>
+    </div>
+    <div class="strip">
+      <div class="stat"><b>${openN}</b><small>jobs open</small></div>
+      <div class="stat"><b>${num(DATA.totals.spans)}</b><small>strikes labelled</small></div>
+      <div class="stat"><b>${DATA.totals.clips}</b><small>clips</small></div>
+      <div class="stat"><b>${DATA.totals.classes}</b><small>strike types</small></div>
+      <div class="stat ${starving ? "alarm" : ""}"><b>${starving}</b><small>at risk</small></div>
+    </div>
+    <nav role="tablist">${TABS.map(([k, l]) =>
+      `<button role="tab" data-tab="${k}" aria-selected="${tab === k}">${l}${counts[k] !== undefined ? `<span class="n">${counts[k]}</span>` : ""}</button>`).join("")}</nav>
+  </div></header>
+  <main class="wrap">${VIEWS[tab]()}</main>
+  <footer class="wrap">${DATA.totals.clips} exports · ${DATA.totals.cvat_tasks} live CVAT tasks ·
+    measured ${esc(DATA.generated_at)}. Assignments save into this page for everyone. Read-only
+    against CVAT.</footer>`;
+  wire();
+}
+
+function wire() {
+  document.querySelectorAll("nav button").forEach(b =>
+    b.onclick = () => setTab(b.dataset.tab));
+  document.querySelectorAll("[data-board]").forEach(b =>
+    b.onclick = () => { filters.board = b.dataset.board; render(); });
+  const who = $("#who-filter");
+  if (who) who.onchange = () => { filters.who = who.value; render(); };
+  const kind = $("#kind-filter");
+  if (kind) kind.onchange = () => { filters.kind = kind.value; render(); };
+  document.querySelectorAll("[data-item]").forEach(el =>
+    el.onchange = () => setWork(el.dataset.item, { [el.dataset.field]: el.value }));
+  document.querySelectorAll("[data-flag]").forEach(b =>
+    b.onclick = () => toggleFlag(b.dataset.flag));
+  document.querySelectorAll("[data-goto]").forEach(a =>
+    a.onclick = e => { e.preventDefault(); setTab(a.dataset.goto); });
+  const cf = $("#class-filter");
+  if (cf) {
+    cf.oninput = () => { filters.cls = cf.value; render(); $("#class-filter").focus(); };
+  }
+  const cp = $("#class-problems");
+  if (cp) cp.onchange = () => { filters.problems = cp.checked; render(); };
+}
+
+let start = location.hash.slice(1);
+if (!TABS.some(t => t[0] === start)) {
+  try { start = localStorage.getItem("sv-tab") || "home"; } catch (e) { start = "home"; }
+}
+tab = TABS.some(t => t[0] === start) ? start : "home";
+render();
+/* Resolve the capability early so a read-only view can grey its controls before anyone clicks. */
+cap().then(a => { if (!a) { readOnly = true; render(); } });
+
+</script>
+</body></html>
