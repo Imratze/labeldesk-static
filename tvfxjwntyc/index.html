@@ -220,7 +220,7 @@ footer { color:var(--muted); font-size:12px; padding-block:22px; border-top:1px 
   <div class="wrap">
     <div class="masthead">
       <div class="mark">Sekuence <span>Model Desk</span></div>
-      <span class="verdict"><span class="d"></span>Beta 2 · ready, pending deploy</span>
+      <span class="verdict"><span class="d"></span>Beta 2 · live on the server</span>
       <div class="stamp">Checkpoint 2026-09-25 · yolo11s pose</div>
     </div>
     <nav aria-label="Sections">
@@ -272,12 +272,12 @@ footer { color:var(--muted); font-size:12px; padding-block:22px; border-top:1px 
         <li><span class="ic ok">✓</span><div><b>Fast scan path intact</b><span>strike_trunk.pt and strike_heads.pt exported</span></div></li>
         <li><span class="ic ok">✓</span><div><b>Only full strike names</b><span>no "Straight" or "Teep" fallbacks</span></div></li>
         <li><span class="ic ok">✓</span><div><b>Start-of-clip phantom removed</b><span>6-frame edge guard on every clip</span></div></li>
-        <li><span class="ic no">!</span><div><b>Server not deployed</b><span>the live worker still runs July's code and model</span></div></li>
+        <li><span class="ic ok">✓</span><div><b>Deployed to the server</b><span>sparvision-worker v20, 28 Sep · verified in production · rollback target v19</span></div></li>
       </ul>
       <div>
         <div class="callout">
-          <h3>Deploy before beta 2 ships</h3>
-          <p><code>modal deploy modal_app.py</code> has never run. The image needs the three files in <code>newretrain/</code> plus the <code>readout/</code> modules. Until then users see none of this.</p>
+          <h3>Live since 28 Sep</h3>
+          <p>The server now runs this model (v20; the previous version, v19, served the August model). A self-test run on the deployed server gives this model's fingerprint. Deploy only from the <code>handoff_2026-09-28</code> folder: the repo's own <code>model/</code> still holds the August checkpoint.</p>
         </div>
         <div class="expect">
           <h3>What beta users will notice</h3>
@@ -390,6 +390,7 @@ footer { color:var(--muted); font-size:12px; padding-block:22px; border-top:1px 
       </table>
     </div>
     <p class="note">The shipped model trained for 35 epochs with early stopping and reached validation mean F1 0.819.</p>
+    <p class="note warn"><b>A later retrain, which also trained on the test videos (28 Sep), was not shipped.</b> On the held-out validation athletes it detected fewer strikes (84.5% → 77.9%), mostly because one athlete's body jabs dropped from 90% to 31% detected. Accuracy when detected rose (74.9% → 78.5%). test.mp4 fell to 7/9. The model above stays in service.</p>
   </section>
 
   <section class="panel" id="phone" aria-labelledby="h-p">
